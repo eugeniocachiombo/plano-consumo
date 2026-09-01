@@ -7,7 +7,9 @@ datasource db {
   provider = "postgresql"
 }
 
-model User { 
-  id    Int     @id @default(autoincrement()) 
-  name  String? @unique
-} 
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String?
+  username String  @unique @default("empty")
+  password String  @default("empty")
+}
