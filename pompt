@@ -1,0 +1,1299 @@
+# PROMPT — IMPLEMENTAÇÃO DE CRUD COMPLETO COM BASE NA ARQUITECTURA EXISTENTE
+
+Quero implementar um **CRUD completo e funcional** para a entidade/modelo que vou fornecer, respeitando rigorosamente a arquitectura, estrutura de pastas, padrões de código, validações, tratamento de erros, comunicação com API e identidade visual já existentes no projecto.
+
+## 1. REGRA PRINCIPAL
+
+**Não cries uma arquitectura nova.**
+
+A entidade que vou fornecer deve comportar-se como uma extensão natural da aplicação existente.
+
+Antes de gerar qualquer código:
+
+1. Analisa cuidadosamente todos os códigos de referência fornecidos.
+2. Identifica a arquitectura actualmente utilizada.
+3. Identifica como o backend está estruturado.
+4. Identifica como `Crud`, `Repository`, `errorReport` e as rotas são utilizados.
+5. Identifica como a store Pinia é estruturada.
+6. Identifica como o serviço `api` é utilizado.
+7. Identifica o padrão visual das páginas Vue.
+8. Identifica como as validações são implementadas.
+9. Identifica como os erros da API são tratados no frontend.
+10. Analisa o Model que será fornecido.
+11. Identifica todos os campos, tipos, relações, campos opcionais, campos obrigatórios e constraints existentes.
+12. Só depois disso gera os ficheiros necessários.
+
+**Não inventes estruturas, campos, endpoints, relações, regras de negócio ou configurações que não existam.**
+
+---
+
+# 2. CONTEXTO DO PROJECTO
+
+O projecto utiliza:
+
+### Backend
+
+* Node.js
+* TypeScript
+* Express
+* Prisma ORM
+* PostgreSQL
+* Zod para validação
+* bcrypt apenas quando houver campos de palavra-passe
+* JWT apenas quando realmente necessário
+* Repository Pattern
+* Classe base `Crud` já existente
+* Tratamento centralizado de erros através de `errorReport`
+
+### Frontend
+
+* Vue 3
+* TypeScript
+* Composition API
+* `<script setup>`
+* Pinia
+* Axios através do serviço `api` já existente
+* PrimeVue
+* Tailwind CSS, caso já seja utilizado no projecto
+* Vue Router
+* Toast através do PrimeVue
+* Suporte a dark mode, caso já exista
+
+---
+
+# 3. CÓDIGOS DE REFERÊNCIA
+
+Os códigos que serão fornecidos abaixo são **exclusivamente referências arquitecturais**.
+
+Utiliza-os para compreender:
+
+* estrutura de pastas;
+* organização dos ficheiros;
+* padrão dos repositories;
+* utilização da classe `Crud`;
+* validações Zod;
+* tratamento de erros;
+* estrutura das rotas Express;
+* utilização do Prisma;
+* estrutura das stores Pinia;
+* utilização do serviço `api`;
+* comunicação frontend/backend;
+* padrão das páginas Vue;
+* utilização dos componentes PrimeVue;
+* padrão visual;
+* mensagens de sucesso e erro;
+* loading;
+* formulários;
+* dialogs;
+* tabelas;
+* confirmações;
+* tratamento de relacionamentos.
+
+**Não copies literalmente a lógica da entidade de referência.**
+
+Se os códigos de referência forem de `User`, `Signup`, `Login` ou autenticação, a lógica específica de:
+
+* username;
+* password;
+* bcrypt;
+* JWT;
+* autenticação;
+* sessão;
+* tokens;
+* login;
+* logout;
+
+deve permanecer exclusivamente no módulo de autenticação.
+
+Não adicionar essas funcionalidades à nova entidade, excepto se o Model fornecido possuir explicitamente essa necessidade.
+
+---
+
+# 4. ENTIDADE A IMPLEMENTAR
+
+Na próxima mensagem vou fornecer o **Model/entidade** que deverá ser implementado.
+
+O Model fornecido será a **fonte principal para determinar**:
+
+* nome da entidade;
+* campos;
+* tipos;
+* relações;
+* IDs;
+* campos opcionais;
+* campos obrigatórios;
+* enums;
+* constraints;
+* foreign keys;
+* nomes utilizados pelo Prisma.
+
+**Não inventes campos que não estejam presentes no Model ou nos códigos existentes.**
+
+<model>
+COLOCAREI O MODEL AQUI NA PRÓXIMA MENSAGEM
+</model>
+
+---
+
+# 5. BACKEND — REPOSITORY
+
+Criar ou actualizar o Repository da entidade seguindo **exactamente o padrão do Repository de referência**.
+
+O Repository deve:
+
+* utilizar a classe `Crud` existente;
+* seguir o mesmo padrão de constructor;
+* utilizar Prisma;
+* definir `createSchema`;
+* definir `updateSchema`;
+* criar os respectivos tipos TypeScript;
+* implementar `beforeCreate` apenas quando necessário;
+* implementar `beforeUpdate` apenas quando necessário;
+* reutilizar funcionalidades herdadas da classe `Crud`;
+* não duplicar funcionalidades existentes na classe base;
+* respeitar os campos e relações reais do Model.
+
+Exemplo conceptual:
+
+```ts
+class CategoryRepository extends Crud {
+    constructor() {
+        super("category", {
+            create: createCategorySchema,
+            update: updateCategorySchema
+        });
+    }
+}
+```
+
+**Este exemplo é apenas ilustrativo.**
+
+Adapta obrigatoriamente ao padrão real encontrado nos ficheiros fornecidos.
+
+---
+
+# 6. VALIDAÇÃO — ZOD
+
+Criar as validações Zod necessárias para:
+
+* criação;
+* actualização.
+
+As validações devem ser baseadas nos campos reais da entidade.
+
+Exemplo conceptual:
+
+```ts
+export const createCategorySchema = z.object({
+    name: z.string()
+        .min(1, "O nome é obrigatório")
+        .max(100, "O nome não pode ultrapassar 100 caracteres")
+});
+
+export const updateCategorySchema =
+    createCategorySchema.partial();
+```
+
+Não copies este exemplo se ele não corresponder ao Model.
+
+Respeita:
+
+* tipos;
+* campos obrigatórios;
+* campos opcionais;
+* limites;
+* enums;
+* relações;
+* valores permitidos;
+* constraints já existentes.
+
+**Não inventes regras de negócio sem fundamento no código fornecido.**
+
+---
+
+# 7. ROUTES — EXPRESS
+
+Criar ou actualizar as rotas necessárias para o CRUD.
+
+Seguir exactamente o padrão das rotas existentes.
+
+Normalmente:
+
+```text
+POST   /entidade
+GET    /entidade
+GET    /entidade/:id
+PUT    /entidade/:id
+DELETE /entidade/:id
+```
+
+Mas utiliza os endpoints e convenções encontrados nos códigos de referência quando estes forem diferentes.
+
+O tratamento de erros deve seguir o padrão existente:
+
+```ts
+try {
+    ...
+} catch (error) {
+    return errorReport(res, error);
+}
+```
+
+Não criar um novo sistema de tratamento de erros.
+
+---
+
+# 8. RESPOSTAS HTTP
+
+Respeitar o padrão existente.
+
+Quando aplicável:
+
+```text
+POST       → 201
+GET        → 200
+GET /:id   → 200
+PUT        → 200
+DELETE     → 200
+```
+
+As mensagens devem ser claras e estar em português.
+
+Exemplo:
+
+```json
+{
+    "message": "Registo criado com sucesso"
+}
+```
+
+Não devolver informações internas ou sensíveis.
+
+---
+
+# 9. FRONTEND — STORE PINIA
+
+Criar ou actualizar a store Pinia da entidade.
+
+Exemplo:
+
+```text
+category.store.ts
+```
+
+A store deve seguir exactamente o padrão existente no projecto.
+
+Deve utilizar:
+
+```ts
+defineStore
+```
+
+e, quando aplicável:
+
+```ts
+setup store / Composition API
+```
+
+Deve possuir, conforme o padrão existente:
+
+* estado;
+* loading;
+* error;
+* listagem;
+* consulta individual;
+* criação;
+* actualização;
+* eliminação.
+
+Implementar métodos equivalentes a:
+
+```ts
+list()
+find(id)
+create(payload)
+update(id, payload)
+remove(id)
+```
+
+Utilizar o serviço `api` existente:
+
+```ts
+import { api } from '@/services/api';
+```
+
+ou o caminho real identificado nos códigos fornecidos.
+
+**Não criar uma nova instância Axios.**
+
+Não criar:
+
+* novo `baseURL`;
+* novo interceptor;
+* novo cliente HTTP;
+* nova configuração `.env`.
+
+---
+
+# 10. FRONTEND — PÁGINA CRUD
+
+Criar ou actualizar a View da entidade.
+
+Exemplo:
+
+```text
+CategoryView.vue
+```
+
+O caminho deve seguir a estrutura real do projecto.
+
+A página deve utilizar:
+
+* Vue 3;
+* `<script setup>`;
+* TypeScript;
+* Composition API;
+* PrimeVue;
+* Pinia;
+* Tailwind, se já utilizado;
+* Toast;
+* Vue Router, quando necessário.
+
+---
+
+# 11. LISTAGEM
+
+A página deve apresentar uma listagem funcional através dos componentes PrimeVue já utilizados no projecto.
+
+Incluir, quando aplicável:
+
+* DataTable;
+* colunas correspondentes aos campos relevantes;
+* loading;
+* estado vazio;
+* paginação;
+* pesquisa;
+* filtros;
+* ordenação.
+
+Não adicionar funcionalidades desnecessárias se elas não fizerem parte do padrão existente.
+
+---
+
+# 12. CRIAÇÃO
+
+Implementar formulário de criação através do padrão visual existente.
+
+Utilizar os componentes PrimeVue adequados aos tipos dos campos:
+
+* `InputText`;
+* `InputNumber`;
+* `Password`;
+* `Select`/`Dropdown`;
+* `DatePicker`;
+* `Checkbox`;
+* `ToggleSwitch`;
+* `Textarea`;
+* ou outros componentes já utilizados no projecto.
+
+O componente deve ser escolhido de acordo com o tipo real do campo.
+
+---
+
+# 13. EDIÇÃO
+
+Implementar edição do registo seleccionado.
+
+Pode reutilizar o mesmo formulário de criação quando esse for o padrão existente.
+
+Ao editar:
+
+* carregar os dados correctos;
+* preencher o formulário;
+* validar os campos;
+* enviar apenas os dados necessários;
+* actualizar a listagem;
+* apresentar feedback de sucesso ou erro.
+
+---
+
+# 14. ELIMINAÇÃO
+
+Implementar eliminação com confirmação.
+
+Utilizar o mecanismo de confirmação já existente no projecto.
+
+Após eliminação:
+
+* actualizar a listagem;
+* mostrar Toast de sucesso;
+* tratar erros adequadamente.
+
+---
+
+# 15. VALIDAÇÃO NO FRONTEND
+
+Implementar validação dos campos antes de enviar os dados.
+
+Os erros devem ser apresentados individualmente junto aos respectivos campos.
+
+Exemplo:
+
+```ts
+fieldErrors.name
+fieldErrors.description
+```
+
+Quando a API devolver:
+
+```json
+{
+    "message": "Dados inválidos",
+    "errors": {
+        "name": [
+            "O nome é obrigatório"
+        ]
+    }
+}
+```
+
+mostrar o erro no campo correspondente.
+
+Quando o utilizador começar a corrigir um campo, limpar o respectivo erro.
+
+A validação frontend não substitui a validação backend.
+
+A validação definitiva deve continuar a ser realizada pelo Zod no backend.
+
+---
+
+# 16. TRATAMENTO DE ERROS
+
+Não utilizar simplesmente:
+
+```ts
+catch (error) {
+    console.log(error);
+}
+```
+
+Os erros devem seguir o padrão existente.
+
+No backend:
+
+```ts
+return errorReport(res, error);
+```
+
+No frontend interpretar correctamente, conforme o padrão existente:
+
+```ts
+error.response?.data?.message
+error.response?.data?.errors
+```
+
+Apresentar mensagens amigáveis ao utilizador.
+
+Não expor:
+
+* stack traces;
+* queries SQL;
+* detalhes internos;
+* credenciais;
+* tokens;
+* informações sensíveis.
+
+---
+
+# 17. RELACIONAMENTOS
+
+Se o Model possuir relacionamentos, implementá-los correctamente.
+
+Exemplos:
+
+```text
+Product → Category
+Employee → Department
+Product → Supplier
+```
+
+Quando necessário:
+
+* carregar dados relacionados;
+* utilizar `Select`/`Dropdown`;
+* enviar IDs;
+* respeitar foreign keys;
+* tratar valores nulos;
+* evitar enviar objectos completos quando a API espera apenas IDs.
+
+Utilizar exactamente os relacionamentos existentes no Model.
+
+---
+
+# 18. PRISMA
+
+Respeitar integralmente o Model Prisma fornecido.
+
+Não alterar sem necessidade:
+
+* nomes de campos;
+* tipos;
+* IDs;
+* relacionamentos;
+* enums;
+* constraints;
+* foreign keys.
+
+Se for realmente necessária uma alteração ao `schema.prisma`, indicar apenas a alteração necessária.
+
+Não criar migrations automaticamente, salvo se eu solicitar.
+
+---
+
+# 19. UI/UX
+
+A interface deve parecer que sempre pertenceu ao projecto.
+
+Respeitar:
+
+* identidade visual existente;
+* componentes PrimeVue utilizados;
+* espaçamentos;
+* tipografia;
+* cards;
+* botões;
+* tabelas;
+* dialogs;
+* ícones;
+* cores;
+* dark mode;
+* responsividade.
+
+Não alterar o tema global.
+
+Não criar uma identidade visual diferente.
+
+Não instalar bibliotecas novas se os componentes existentes forem suficientes.
+
+---
+
+# 20. AUTENTICAÇÃO
+
+Não alterar o sistema de autenticação existente.
+
+Não adicionar:
+
+* JWT;
+* bcrypt;
+* login;
+* logout;
+* guards;
+* middleware de autenticação;
+
+à nova entidade, excepto se forem explicitamente necessários de acordo com a arquitectura existente e o Model fornecido.
+
+Se as rotas já forem protegidas por middleware existente, reutilizar esse middleware.
+
+---
+
+# 21. O QUE NÃO DEVE SER FEITO
+
+NÃO:
+
+* recriar a classe `Crud`;
+* recriar `errorReport`;
+* recriar `api`;
+* recriar Prisma Client;
+* criar uma nova arquitectura;
+* instalar bibliotecas desnecessárias;
+* alterar configurações globais;
+* alterar autenticação existente;
+* copiar lógica de login;
+* adicionar JWT sem necessidade;
+* adicionar bcrypt sem existir password;
+* inventar campos;
+* inventar relações;
+* inventar regras de negócio;
+* criar tabelas novas sem necessidade;
+* criar migrations sem eu solicitar;
+* criar serviços duplicados;
+* criar stores duplicadas;
+* alterar módulos que não estejam relacionados com o CRUD;
+* criar ficheiros desnecessários.
+
+---
+
+# 22. REUTILIZAÇÃO OBRIGATÓRIA
+
+Antes de criar qualquer ficheiro:
+
+**Verifica se ele já existe.**
+
+Se existir:
+
+* adapta-o;
+* preserva a estrutura existente;
+* mantém funcionalidades existentes;
+* adiciona apenas o necessário.
+
+Se não existir:
+
+* cria seguindo exactamente o padrão dos ficheiros de referência.
+
+Não duplicar funcionalidades.
+
+---
+
+# 23. FICHEIROS A ENTREGAR
+
+Entregar **exclusivamente os ficheiros necessários** para que o CRUD funcione.
+
+Por exemplo:
+
+```text
+backend/repositories/category.repository.ts
+backend/routes/category.routes.ts
+frontend/stores/category.store.ts
+frontend/views/CategoryView.vue
+```
+
+Os caminhos devem ser adaptados aos caminhos reais encontrados no projecto.
+
+Se forem necessários outros ficheiros existentes, actualizar apenas os que realmente precisam de alteração.
+
+---
+
+# 24. FORMATO DA RESPOSTA
+
+A resposta final deve conter **APENAS os ficheiros finais necessários**.
+
+Para cada ficheiro utilizar:
+
+```text
+Nome do ficheiro: category.repository.ts
+```
+
+seguido do código completo.
+
+Depois:
+
+```text
+Nome do ficheiro: category.routes.ts
+```
+
+seguido do código completo.
+
+E assim por diante.
+
+### NÃO fornecer:
+
+* tutorial;
+* explicações;
+* análise da implementação;
+* pseudocódigo;
+* código parcial;
+* exemplos fictícios;
+* alternativas;
+* ficheiros desnecessários;
+* ZIP;
+* dependências desnecessárias.
+
+O código deve estar **completo e pronto para copiar directamente para o projecto**.
+
+---
+
+# 25. CRITÉRIO FINAL DE ACEITAÇÃO
+
+O resultado deve implementar o fluxo completo:
+
+```text
+Vue
+ ↓
+Validação frontend
+ ↓
+Pinia Store
+ ↓
+api existente
+ ↓
+Express Route
+ ↓
+Validação Zod
+ ↓
+Repository
+ ↓
+Prisma
+ ↓
+PostgreSQL
+ ↓
+Resposta da API
+ ↓
+Pinia
+ ↓
+Actualização da interface
+ ↓
+Toast / tratamento de erros
+```
+
+A nova entidade deve funcionar como parte integrante da arquitectura existente.
+
+**Não quero apenas uma interface visual.**
+
+Quero um CRUD funcional, integrado com o backend, base de dados, validações, store, API e interface existentes.
+
+---
+
+# 26. CÓDIGOS DE REFERÊNCIA
+
+Vou fornecer abaixo os códigos existentes que devem ser analisados antes da implementação.
+
+<referencia>
+
+import { Router, Request, Response } from "express";
+import { userRepository } from "../repository/user.repository";
+import { errorReport } from "../repository/base/errorHandler.repository";
+import jwt from "jsonwebtoken";
+
+const userRoutes = Router();
+const JWT_SECRET = process.env.JWT_SECRET || "sua_chave_secreta_aqui";
+
+// Rota de Login
+userRoutes.post("/users/login", async (req: Request, res: Response) => {
+    try {
+        
+        const user = await userRepository.login(req.body);
+
+        // Gera o token JWT com validade (ex: 8 horas)
+        const token = jwt.sign(
+            { id: user.id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        return res.status(200).json({
+            token,
+            user
+        });
+    } catch (error) {
+        return errorReport(res, error);
+    }
+});
+
+userRoutes.post("/users", async (req: Request, res: Response) => {
+    try {
+        const newUser = await userRepository.create(req.body);
+        return res.status(201).json(newUser);
+    } catch (error) {
+        return errorReport(res, error);
+    }
+});
+
+userRoutes.get("/users", async (_req: Request, res: Response) => {
+    try {
+        const users = await userRepository.list();
+        return res.status(200).json(users);
+    } catch (error) {
+        return errorReport(res, error);
+    }
+});
+
+userRoutes.get("/users/:id", async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const user = await userRepository.find(id);
+        return res.status(200).json(user);
+    } catch (error) {
+        return errorReport(res, error);
+    }
+});
+
+userRoutes.put("/users/:id", async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const updatedUser = await userRepository.update(id, req.body);
+        return res.status(200).json(updatedUser);
+    } catch (error) {
+        return errorReport(res, error);
+    }
+});
+
+userRoutes.delete("/users/:id", async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        await userRepository.delete(id);
+        return res.status(200).json({ message: "Registo apagado com sucesso" });
+    } catch (error) {
+        return errorReport(res, error);
+    }
+});
+
+export { userRoutes };
+
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { api } from '@/services/api';
+
+export interface User {
+  id: number;
+  name?: string | null;
+  username: string;
+}
+
+export interface RegisterPayload {
+  name?: string;
+  username: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}
+
+export const useUserStore = defineStore('user', () => {
+  const currentUser = ref<User | null>(null);
+  const token = ref<string | null>(localStorage.getItem('token'));
+  const isLoading = ref<boolean>(false);
+  const error = ref<string | null>(null);
+
+  const isAuthenticated = computed<boolean>(() => !!token.value);
+  const userName = computed<string>(
+    () => currentUser.value?.name || currentUser.value?.username || 'Utilizador'
+  );
+
+  /**
+   * Atualiza a sessão na memória, LocalStorage e nos cabeçalhos HTTP do Axios
+   */
+  function setSession(newToken: string | null, user: User | null): void {
+    token.value = newToken;
+    currentUser.value = user;
+
+    if (newToken) {
+      localStorage.setItem('token', newToken);
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+    } else {
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
+    }
+
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }
+
+  function clearError(): void {
+    error.value = null;
+  }
+
+  async function login(username: string, password: string): Promise<boolean | string> {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await api.post<unknown, AuthResponse>('/auth/login', { username, password });
+      
+      if (response && response.token) {
+        setSession(response.token, response.user);
+        return true;
+      }
+      
+      return 'Resposta inválida do servidor.';
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Nome de utilizador ou palavra-passe incorretos.';
+      error.value = message;
+      return message;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function register(payload: RegisterPayload): Promise<User> {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await api.post<unknown, User>('/users', payload);
+      return response;
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Erro ao realizar o cadastro.';
+      error.value = message;
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  function logout(): void {
+    setSession(null, null);
+    error.value = null;
+  }
+
+  /**
+   * Inicializa o estado do utilizador e configura o Token no arranque da aplicação
+   */
+  function initUser(): void {
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+
+    if (savedToken && savedUser) {
+      try {
+        currentUser.value = JSON.parse(savedUser) as User;
+        token.value = savedToken;
+        api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
+      } catch {
+        logout();
+      }
+    } else {
+      logout();
+    }
+  }
+
+  // Executa a verificação ao instanciar a store
+  initUser();
+
+  return {
+    currentUser,
+    token,
+    isLoading,
+    error,
+    isAuthenticated,
+    userName,
+    clearError,
+    login,
+    register,
+    logout,
+    initUser
+  };
+});
+
+import { z } from 'zod';
+import bcrypt from 'bcrypt';
+import { Crud } from "./base/crud.repository";
+import { prisma } from '../lib/prisma';
+
+export const createUserSchema = z.object({
+    name: z.string().transform(v => v === "" ? undefined : v).optional(),
+    username: z.string().min(3, "Nome de utilizador é obrigatório"),
+    password: z.string().min(6, "A palavra-passe deve ter pelo menos 6 caracteres")
+});
+
+export const updateUserSchema = createUserSchema.partial();
+
+export const loginUserSchema = z.object({
+    username: z.string().min(1, "O nome de utilizador é obrigatório"),
+    password: z.string().min(1, "A palavra-passe é obrigatória")
+});
+
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type LoginUserInput = z.infer<typeof loginUserSchema>;
+
+class UserRepository extends Crud {
+    constructor() {
+        super("user", {
+            create: createUserSchema,
+            update: updateUserSchema
+        });
+    }
+
+    protected async beforeCreate(data: any) {
+        if (data.password) {
+            data.password = await bcrypt.hash(data.password, 10);
+        }
+        return data;
+    }
+
+    protected async beforeUpdate(data: any) {
+        if (data.password) {
+            data.password = await bcrypt.hash(data.password, 10);
+        }
+        return data;
+    }
+
+   
+    async login(data: unknown, customSchema?: z.ZodSchema) {
+        const schema = customSchema || loginUserSchema;
+        const { username, password } = schema.parse(data) as LoginUserInput;
+
+        const user = await prisma.user.findUnique({
+            where: { username }
+        });
+
+        if (!user) {
+            throw new Error("INVALID_CREDENTIALS");
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            throw new Error("INVALID_CREDENTIALS");
+        }
+
+        const { password: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+    }
+}
+
+export const userRepository = new UserRepository();
+
+<script setup>
+import { reactive, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import Card from 'primevue/card';
+import InputText from 'primevue/inputtext';
+import Password from 'primevue/password';
+import Button from 'primevue/button';
+import Toast from 'primevue/toast';
+import Badge from 'primevue/badge';
+import { useUserStore } from '@/stores/user.store';
+import { useToast } from 'primevue/usetoast';
+
+const router = useRouter();
+const userStore = useUserStore();
+const toast = useToast();
+
+const form = reactive({
+  name: '',
+  username: '',
+  password: ''
+});
+
+const fieldErrors = ref({
+  name: '',
+  username: '',
+  password: ''
+});
+
+function generateUsername(name) {
+  if (!name) return '';
+  
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '.');
+}
+
+// Limpa o erro do campo quando o utilizador digita
+function clearFieldError(field) {
+  if (fieldErrors.value[field]) {
+    fieldErrors.value[field] = '';
+  }
+}
+
+watch(
+  () => form.name,
+  (newName) => {
+    form.username = generateUsername(newName);
+    clearFieldError('name');
+    clearFieldError('username');
+  }
+);
+
+watch(
+  () => form.password,
+  () => clearFieldError('password')
+);
+
+function getErrorMessage(errorField) {
+  if (!errorField) return '';
+  return Array.isArray(errorField) ? errorField[0] : errorField;
+}
+
+async function handleRegister() {
+  if (userStore.isLoading) return;
+
+  userStore.isLoading = true;
+  fieldErrors.value = {};
+
+  try {
+    await userStore.register({
+      name: form.name.trim(),
+      username: form.username,
+      password: form.password
+    });
+
+    toast.add({ 
+      severity: 'success', 
+      summary: 'Conta criada!', 
+      detail: 'O seu registo foi concluído com sucesso. Redirecionando...',
+      life: 3000 
+    });
+    
+    setTimeout(() => {
+      router.push('/login');
+    }, 2000);
+  } catch (error) {
+    const responseData = error?.response?.data;
+
+    if (responseData?.errors) {
+      fieldErrors.value = { ...responseData.errors };
+    }
+
+    toast.add({ 
+      severity: 'error', 
+      summary: 'Erro no Registo', 
+      detail: responseData?.message || 'Por favor, verifique os campos destacados.',
+      life: 4000 
+    });
+  } finally {
+    userStore.isLoading = false;
+  }
+}
+</script>
+
+<template>
+  <Toast position="top-right" />
+
+  <main class="auth-wrapper">
+    <div class="auth-container">
+      <Card class="auth-card" role="region" aria-labelledby="auth-title">
+        <template #title>
+          <header class="auth-header">
+            <div class="auth-icon-badge" aria-hidden="true">
+              <i class="pi pi-user-plus"></i>
+            </div>
+            <h1 id="auth-title">Criar Conta</h1>
+            <p>Registe-se para acompanhar e otimizar o seu consumo.</p>
+          </header>
+        </template>
+        
+        <template #content>
+          <form @submit.prevent="handleRegister" class="form-grid" novalidate>
+            
+            <!-- Campo: Nome -->
+            <div class="field">
+              <label for="name" class="required-label">Nome Completo</label>
+              <div class="p-input-icon-left">
+                <i class="pi pi-user" />
+                <InputText 
+                  id="name" 
+                  v-model="form.name" 
+                  placeholder="Ex: João Silva" 
+                  class="w-full"
+                  :invalid="!!fieldErrors.name"
+                  :aria-invalid="!!fieldErrors.name"
+                  aria-describedby="name-error"
+                  autocomplete="name"
+                  required
+                />
+              </div>
+              <small id="name-error" v-if="fieldErrors.name" class="p-error-message" role="alert">
+                <i class="pi pi-exclamation-circle"></i>
+                <span>{{ getErrorMessage(fieldErrors.name) }}</span>
+              </small>
+            </div>
+
+            <!-- Campo: Nome de Utilizador (Gerado) -->
+            <div class="field">
+              <div class="label-with-badge">
+                <label for="username">Nome de utilizador</label>
+                <Badge value="Automático" severity="secondary" class="auto-badge" />
+              </div>
+              <div class="p-input-icon-left">
+                <i class="pi pi-at" />
+                <InputText 
+                  id="username" 
+                  v-model="form.username" 
+                  disabled
+                  placeholder="joao.silva" 
+                  class="w-full disabled-input" 
+                  :invalid="!!fieldErrors.username"
+                  :aria-invalid="!!fieldErrors.username"
+                  aria-describedby="username-error username-help"
+                />
+              </div>
+              <small id="username-help" class="field-help">Gerado automaticamente a partir do seu nome.</small>
+              <small id="username-error" v-if="fieldErrors.username" class="p-error-message" role="alert">
+                <i class="pi pi-exclamation-circle"></i>
+                <span>{{ getErrorMessage(fieldErrors.username) }}</span>
+              </small>
+            </div>
+            
+            <!-- Campo: Palavra-Passe -->
+            <div class="field">
+              <label for="password" class="required-label">Palavra-passe</label>
+              <Password 
+                id="password" 
+                v-model="form.password" 
+                toggleMask 
+                promptLabel="Escolha uma palavra-passe"
+                weakLabel="Fraca"
+                mediumLabel="Aceitável"
+                strongLabel="Forte"
+                placeholder="Crie uma palavra-passe segura"
+                class="w-full"
+                inputClass="w-full"
+                :invalid="!!fieldErrors.password"
+                :aria-invalid="!!fieldErrors.password"
+                aria-describedby="password-error"
+                autocomplete="new-password"
+                required
+              >
+                <template #header>
+                  <div class="password-header-title">Requisitos da palavra-passe</div>
+                </template>
+                <template #footer>
+                  <ul class="password-requirements">
+                    <li>Mínimo de 8 caracteres</li>
+                    <li>Inclua letras e números</li>
+                  </ul>
+                </template>
+              </Password>
+              <small id="password-error" v-if="fieldErrors.password" class="p-error-message" role="alert">
+                <i class="pi pi-exclamation-circle"></i>
+                <span>{{ getErrorMessage(fieldErrors.password) }}</span>
+              </small>
+            </div>
+
+            <!-- Botão Principal -->
+            <Button 
+              type="submit" 
+              label="Criar conta" 
+              icon="pi pi-user-plus" 
+              class="w-full submit-btn p-button-primary" 
+              :loading="userStore.isLoading"
+              :disabled="userStore.isLoading"
+            />
+          </form>
+
+          <div class="auth-footer">
+            <span>Já tem uma conta?</span>
+            <Button 
+              label="Iniciar sessão" 
+              link 
+              class="login-link-btn"
+              @click="router.push('/login')" 
+            />
+          </div>
+        </template>
+      </Card>
+
+      <p class="auth-copyright">
+        Acesso seguro e controlo inteligente de consumo
+      </p>
+    </div>
+  </main>
+</template>
+
+</referencia>
+
+---
+
+# 27. MODEL DA ENTIDADE
+
+O Model será enviado **numa mensagem separada depois deste prompt**.
+
+Não inventes o Model.
+
+Aguarda pelo Model que será fornecido na próxima mensagem e, com base nele e nos códigos de referência, gera exclusivamente os ficheiros necessários.
+A estilização não deve falhar por favor
+
+<model>
+
+O MODEL SERÁ ENVIADO NA PRÓXIMA MENSAGEM.
+
+</model>
