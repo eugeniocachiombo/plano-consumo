@@ -1,73 +1,98 @@
-import { prisma } from "../../lib/prisma";
+import { ZodSchema } from 'zod';
+import { prisma } from '../../lib/prisma';
 
-type PrismaModel = keyof typeof prisma;
+export type PrismaModel = {
+    [K in keyof typeof prisma]: K extends `$${string}` | symbol ? never : K;
+}[keyof typeof prisma];
+
+export interface CrudSchemas {
+    create?: ZodSchema;
+    update?: ZodSchema;
+}
 
 export class Crud {
-    constructor(protected defaultModel?: PrismaModel) {}
-    
-    // Auxiliar interno para validar e obter o modelo ativo
+    constructor(
+        protected defaultModel?: PrismaModel,
+        protected schemas?: CrudSchemas
+    ) {}
+
     private getModel(model?: PrismaModel): PrismaModel {
         const activeModel = model || this.defaultModel;
         if (!activeModel) {
-            throw new Error("Nenhum modelo foi especificado.");
+            throw new Error("Nenhum modelo Prisma foi especificado.");
         }
         return activeModel;
     }
 
-    async create(data: object, model?: PrismaModel) {
-        try {
-            const m = this.getModel(model);
-            return await (prisma[m] as any).create({ data });
-        } catch (error) {
-            return Response.json({ message: 'Erro ao cadastrar' }, { status: 500 });
-        }
+    private parseId(id: string | number): string | number {
+        if (typeof id === 'number') return id;
+        const isPureNumber = /^\d+$/.test(id);
+        return isPureNumber ? Number(id) : id;
+    }
+
+    protected async beforeCreate(data: unknown): Promise<unknown> {
+        return data;
+    }
+
+    protected async beforeUpdate(data: unknown): Promise<unknown> {
+        return data;
+    }
+
+    async create(data: unknown, model?: PrismaModel, customSchema?: ZodSchema) {
+        const schema = customSchema || this.schemas?.create;
+        let validatedData = schema ? schema.parse(data) : data;
+        validatedData = await this.beforeCreate(validatedData);
+
+        const m = this.getModel(model);
+        return (prisma[m] as any).create({ 
+            data: validatedData as any 
+        });
     }
 
     async list(model?: PrismaModel) {
-        try {
-            const m = this.getModel(model);
-            return await (prisma[m] as any).findMany();
-        } catch (error) {
-            return Response.json({ message: 'Erro ao listar registos' }, { status: 500 });
-        }
+        const m = this.getModel(model);
+        return (prisma[m] as any).findMany();
     }
 
     async find(id: string | number, model?: PrismaModel) {
-        try {
-            const m = this.getModel(model);
-            const item = await (prisma[m] as any).findUnique({
-                where: { id }
-            });
+        const m = this.getModel(model);
+        const parsedId = this.parseId(id);
 
-            if (!item) {
-                return Response.json({ message: 'Registo não encontrado' }, { status: 404 });
-            }
+        const item = await (prisma[m] as any).findUnique({
+            where: { id: parsedId }
+        });
 
-            return item;
-        } catch (error) {
-            return Response.json({ message: 'Erro ao buscar registo' }, { status: 500 });
+        if (!item) {
+            throw new Error("NOT_FOUND");
         }
+
+        return item;
     }
 
-    async update(id: string | number, data: object, model?: PrismaModel) {
-        try {
-            const m = this.getModel(model);
-            return await (prisma[m] as any).update({
-                where: { id },
-                data
-            });
-        } catch (error) {
-            return Response.json({ message: 'Erro ao atualizar registo' }, { status: 500 });
-        }
+    async update(id: string | number, data: unknown, model?: PrismaModel, customSchema?: ZodSchema) {
+        await this.find(id, model);
+
+        const schema = customSchema || this.schemas?.update;
+        let validatedData = schema ? schema.parse(data) : data;
+        validatedData = await this.beforeUpdate(validatedData);
+
+        const m = this.getModel(model);
+        const parsedId = this.parseId(id);
+
+        return (prisma[m] as any).update({
+            where: { id: parsedId },
+            data: validatedData as any
+        });
     }
 
     async delete(id: string | number, model?: PrismaModel) {
-        try {
-            const m = this.getModel(model);
-            await (prisma[m] as any).delete({ where: { id } });
-            return Response.json({ message: 'Registo apagado com sucesso' }, { status: 200 });
-        } catch (error) {
-            return Response.json({ message: 'Erro ao apagar registo' }, { status: 500 });
-        }
+        await this.find(id, model);
+
+        const m = this.getModel(model);
+        const parsedId = this.parseId(id);
+
+        return (prisma[m] as any).delete({
+            where: { id: parsedId }
+        });
     }
 }
