@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import axios from 'axios';
 import { api } from '@/services/api';
 
 export interface User {
@@ -31,14 +30,19 @@ export const useUserStore = defineStore('user', () => {
     () => currentUser.value?.name || currentUser.value?.username || 'Utilizador'
   );
 
+  /**
+   * Atualiza a sessão na memória, LocalStorage e nos cabeçalhos HTTP do Axios
+   */
   function setSession(newToken: string | null, user: User | null): void {
     token.value = newToken;
     currentUser.value = user;
 
     if (newToken) {
       localStorage.setItem('token', newToken);
+      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     } else {
       localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
     }
 
     if (user) {
@@ -52,24 +56,42 @@ export const useUserStore = defineStore('user', () => {
     error.value = null;
   }
 
-  async function login(username: string, password: string): Promise<boolean> {
+  async function login(username: string, password: string): Promise<boolean | string> {
     isLoading.value = true;
     error.value = null;
 
     try {
-      const response = await api.post<unknown, AuthResponse>('/users/login', { username, password });
-      setSession(response.token, response.user);
-      return true;
+      const response = await api.post<unknown, AuthResponse>('/auth/login', { username, password });
+      
+      if (response && response.token) {
+        setSession(response.token, response.user);
+        return true;
+      }
+      
+      return 'Resposta inválida do servidor.';
     } catch (err: any) {
-      return err.response?.data?.message;
+      const message = err.response?.data?.message || 'Nome de utilizador ou palavra-passe incorretos.';
+      error.value = message;
+      return message;
     } finally {
       isLoading.value = false;
     }
   }
 
-  async function register(payload: RegisterPayload): Promise<any> {
-      const response: any = await api.post('/users', payload);
-      return response;   
+  async function register(payload: RegisterPayload): Promise<User> {
+    isLoading.value = true;
+    error.value = null;
+
+    try {
+      const response = await api.post<unknown, User>('/users', payload);
+      return response;
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Erro ao realizar o cadastro.';
+      error.value = message;
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   function logout(): void {
@@ -77,17 +99,27 @@ export const useUserStore = defineStore('user', () => {
     error.value = null;
   }
 
+  /**
+   * Inicializa o estado do utilizador e configura o Token no arranque da aplicação
+   */
   function initUser(): void {
+    const savedToken = localStorage.getItem('token');
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+
+    if (savedToken && savedUser) {
       try {
         currentUser.value = JSON.parse(savedUser) as User;
+        token.value = savedToken;
+        api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
       } catch {
         logout();
       }
+    } else {
+      logout();
     }
   }
 
+  // Executa a verificação ao instanciar a store
   initUser();
 
   return {
@@ -100,6 +132,7 @@ export const useUserStore = defineStore('user', () => {
     clearError,
     login,
     register,
-    logout
+    logout,
+    initUser
   };
 });
