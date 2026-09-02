@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import ToastService from 'primevue/toastservice';
+import ConfirmationService from 'primevue/confirmationservice'; // 1. IMPORTAR
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
 import 'primeicons/primeicons.css';
@@ -14,6 +15,7 @@ const app = createApp(App);
 app.use(router);
 app.use(createPinia());
 app.use(ToastService);
+app.use(ConfirmationService); // 2. REGISTAR O SERVIÇO DE CONFIRMAÇÃO
 app.use(PrimeVue, {
   theme: {
     preset: Aura,
