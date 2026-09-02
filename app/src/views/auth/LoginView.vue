@@ -1,7 +1,127 @@
+<script setup>
+import { reactive, ref, watch } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+
+import Card from 'primevue/card';
+import InputText from 'primevue/inputtext';
+import Password from 'primevue/password';
+import Button from 'primevue/button';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+import { useUserStore } from '@/stores/user.store';
+
+const router = useRouter();
+const route = useRoute();
+const toast = useToast();
+const userStore = useUserStore();
+
+const form = reactive({
+  username: '',
+  password: ''
+});
+
+const fieldErrors = ref({
+  username: '',
+  password: ''
+});
+
+function clearFieldError(field) {
+  if (fieldErrors.value[field]) {
+    fieldErrors.value[field] = '';
+  }
+}
+
+watch(() => form.username, () => clearFieldError('username'));
+watch(() => form.password, () => clearFieldError('password'));
+
+function getErrorMessage(errorField) {
+  if (!errorField) return '';
+  return Array.isArray(errorField) ? errorField[0] : errorField;
+}
+
+function validateForm() {
+  let isValid = true;
+  fieldErrors.value = { username: '', password: '' };
+
+  const trimmedUsername = form.username ? form.username.trim() : '';
+
+  if (!trimmedUsername) {
+    fieldErrors.value.username = 'O nome de utilizador é obrigatório.';
+    isValid = false;
+  }
+
+  if (!form.password) {
+    fieldErrors.value.password = 'A palavra-passe é obrigatória.';
+    isValid = false;
+  }
+
+  return isValid;
+}
+
+async function handleLogin() {
+  if (userStore.isLoading) return;
+
+  if (!validateForm()) {
+    toast.add({
+      severity: 'warn',
+      summary: 'Campos pendentes',
+      detail: 'Por favor, preencha os campos obrigatórios destacadas.',
+      life: 3000
+    });
+    return;
+  }
+
+  fieldErrors.value = { username: '', password: '' };
+
+  try {
+    const success = await userStore.login(form.username.trim(), form.password);
+
+    if (success === true) {
+      toast.add({
+        severity: 'success',
+        summary: 'Sessão Iniciada',
+        detail: 'Autenticação realizada com sucesso. Redirecionando...',
+        life: 2000
+      });
+
+      
+      const redirectPath = '/dashboard';
+      
+      setTimeout(() => {
+        router.push(redirectPath);
+      }, 1000);
+    } else {
+      const errorMessage = typeof success === 'string' ? success : 'Nome de utilizador ou palavra-passe inválidos.';
+      toast.add({
+        severity: 'error',
+        summary: 'Erro de Autenticação',
+        detail: errorMessage,
+        life: 4000
+      });
+    }
+  } catch (error) {
+    const responseData = error?.response?.data;
+
+    if (responseData?.errors) {
+      fieldErrors.value = { ...responseData.errors };
+    }
+
+    toast.add({
+      severity: 'error',
+      summary: 'Erro de Acesso',
+      detail: responseData?.message || 'Nome de utilizador ou palavra-passe inválidos.',
+      life: 4000
+    });
+  }
+}
+</script>
+
 <template>
+  <Toast position="top-right" />
+
   <main class="auth-wrapper">
     <div class="auth-container">
-      <Card class="auth-card">
+      <Card class="auth-card" role="region" aria-labelledby="auth-title">
         <template #content>
           <div class="auth-content">
             <!-- Header -->
@@ -11,7 +131,7 @@
               </div>
 
               <div class="auth-heading">
-                <h1>Bem-vindo de volta</h1>
+                <h1 id="auth-title">Bem-vindo de volta</h1>
                 <p>Entre para gerir os seus planos de consumo.</p>
               </div>
             </header>
@@ -24,7 +144,7 @@
             >
               <!-- Username -->
               <div class="field">
-                <label for="username">
+                <label for="username" class="required-label">
                   Nome de utilizador
                 </label>
 
@@ -38,17 +158,31 @@
                     autocomplete="username"
                     placeholder="Ex: joao.silva"
                     class="auth-input"
-                    :disabled="isLoading"
-                    aria-required="true"
+                    :invalid="!!fieldErrors.username"
+                    :aria-invalid="!!fieldErrors.username"
+                    aria-describedby="username-error"
+                    :disabled="userStore.isLoading"
+                    required
                   />
                 </div>
+
+                <small id="username-error" v-if="fieldErrors.username" class="p-error-message" role="alert">
+                  <i class="pi pi-exclamation-circle"></i>
+                  <span>{{ getErrorMessage(fieldErrors.username) }}</span>
+                </small>
               </div>
 
               <!-- Password -->
               <div class="field">
-                <label for="password">
-                  Palavra-passe
-                </label>
+                <div class="label-with-link">
+                  <label for="password" class="required-label">
+                    Palavra-passe
+                  </label>
+                  
+                  <router-link to="/forgot-password" class="forgot-password-link" tabindex="-1">
+                    Esqueci-me da palavra-passe
+                  </router-link>
+                </div>
 
                 <div class="password-wrapper">
                   <Password
@@ -60,10 +194,18 @@
                     placeholder="Insira a sua palavra-passe"
                     input-class="auth-password-input"
                     class="auth-password"
-                    :disabled="isLoading"
-                    aria-required="true"
+                    :invalid="!!fieldErrors.password"
+                    :aria-invalid="!!fieldErrors.password"
+                    aria-describedby="password-error"
+                    :disabled="userStore.isLoading"
+                    required
                   />
                 </div>
+
+                <small id="password-error" v-if="fieldErrors.password" class="p-error-message" role="alert">
+                  <i class="pi pi-exclamation-circle"></i>
+                  <span>{{ getErrorMessage(fieldErrors.password) }}</span>
+                </small>
               </div>
 
               <!-- Submit -->
@@ -72,12 +214,12 @@
                 label="Entrar na Conta"
                 icon="pi pi-sign-in"
                 class="submit-btn"
-                :loading="isLoading"
-                :disabled="isLoading"
+                :loading="userStore.isLoading"
+                :disabled="userStore.isLoading"
               />
             </form>
 
-            <!-- Register -->
+            <!-- Register Link -->
             <div class="auth-footer">
               <span>Não tem uma conta?</span>
 
@@ -85,8 +227,8 @@
                 label="Cadastre-se"
                 link
                 class="register-link"
-                :disabled="isLoading"
-                @click="$router.push('/cadastro')"
+                :disabled="userStore.isLoading"
+                @click="router.push('/cadastro')"
               />
             </div>
           </div>
@@ -99,39 +241,6 @@
     </div>
   </main>
 </template>
-
-<script setup>
-import { reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
-
-import Card from 'primevue/card';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
-
-const router = useRouter();
-
-const isLoading = ref(false);
-
-const form = reactive({
-  username: '',
-  password: ''
-});
-
-async function handleLogin() {
-  if (!form.username || !form.password) return;
-
-  isLoading.value = true;
-
-  // TODO: Implementar chamada à API (POST /api/login)
-  console.log('Login credentials:', form);
-
-  setTimeout(() => {
-    isLoading.value = false;
-    router.push('/');
-  }, 1000);
-}
-</script>
 
 <style scoped>
 /* =========================================
@@ -147,8 +256,6 @@ async function handleLogin() {
 
   padding: 2rem 1rem;
 
-  /* --- MUDANÇA AQUI: Imagem de Fundo --- */
-  /* Utilizando uma imagem do Unsplash sobre finanças/planejamento */
   background-image:
     linear-gradient(
       to bottom,
@@ -160,8 +267,7 @@ async function handleLogin() {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  background-attachment: fixed; /* Efeito Parallax suave */
-  /* ------------------------------------- */
+  background-attachment: fixed;
 
   transition:
     background-color 0.25s ease,
@@ -187,11 +293,10 @@ async function handleLogin() {
   border: 1px solid var(--surface-border);
   border-radius: 16px;
 
-  /* Garante que o card seja opaco sobre a imagem */
   background: var(--surface-card);
 
   box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.15); /* Sombra um pouco mais forte para destacar do fundo */
+    0 20px 40px rgba(0, 0, 0, 0.15);
 
   overflow: hidden;
 
@@ -283,7 +388,7 @@ async function handleLogin() {
 }
 
 /* =========================================
-   FORM
+   FORM & LABELS
 ========================================= */
 
 .auth-form {
@@ -309,8 +414,32 @@ async function handleLogin() {
   cursor: pointer;
 }
 
+.required-label::after {
+  content: " *";
+  color: var(--p-red-500, #ef4444);
+}
+
+.label-with-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.forgot-password-link {
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.forgot-password-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
 /* =========================================
-   INPUTS
+   INPUTS & ERROS
 ========================================= */
 
 .input-wrapper {
@@ -352,10 +481,6 @@ async function handleLogin() {
   color: var(--primary-color);
 }
 
-/* =========================================
-   PASSWORD
-========================================= */
-
 .password-wrapper {
   width: 100%;
 }
@@ -371,6 +496,16 @@ async function handleLogin() {
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+
+.p-error-message {
+  color: var(--p-red-500, #dc2626);
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.1rem;
+  word-break: break-word;
 }
 
 /* =========================================
@@ -435,21 +570,17 @@ async function handleLogin() {
   transform: translateX(1px);
 }
 
-/* =========================================
-   COPYRIGHT / SECURITY
-========================================= */
-
 .auth-copyright {
   margin: 1.25rem 0 0;
 
-  color: white; /* Alterado para branco para ler melhor sobre o fundo */
+  color: white;
 
   font-size: 0.75rem;
 
   opacity: 0.85;
 
   text-align: center;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5); /* Sombra no texto para garantir leitura */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 /* =========================================
@@ -491,7 +622,7 @@ async function handleLogin() {
     align-items: flex-start;
 
     padding: 1.25rem 0.85rem;
-    background-attachment: scroll; /* Melhora performance em mobile */
+    background-attachment: scroll;
   }
 
   .auth-container {

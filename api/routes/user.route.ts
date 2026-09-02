@@ -1,8 +1,32 @@
 import { Router, Request, Response } from "express";
 import { userRepository } from "../repository/user.repository";
 import { errorReport } from "../repository/base/errorHandler.repository";
+import jwt from "jsonwebtoken";
 
 const userRoutes = Router();
+const JWT_SECRET = process.env.JWT_SECRET || "sua_chave_secreta_aqui";
+
+// Rota de Login
+userRoutes.post("/users/login", async (req: Request, res: Response) => {
+    try {
+        
+        const user = await userRepository.login(req.body);
+
+        // Gera o token JWT com validade (ex: 8 horas)
+        const token = jwt.sign(
+            { id: user.id, username: user.username },
+            JWT_SECRET,
+            { expiresIn: "8h" }
+        );
+
+        return res.status(200).json({
+            token,
+            user
+        });
+    } catch (error) {
+        return errorReport(res, error);
+    }
+});
 
 userRoutes.post("/users", async (req: Request, res: Response) => {
     try {

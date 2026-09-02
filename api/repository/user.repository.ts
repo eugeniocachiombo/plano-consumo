@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import { Crud } from "./base/crud.repository";
+import { prisma } from '../lib/prisma';
 
 export const createUserSchema = z.object({
     name: z.string().transform(v => v === "" ? undefined : v).optional(),
@@ -10,8 +11,14 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = createUserSchema.partial();
 
+export const loginUserSchema = z.object({
+    username: z.string().min(1, "O nome de utilizador é obrigatório"),
+    password: z.string().min(1, "A palavra-passe é obrigatória")
+});
+
 export type CreateUserInput = z.infer<typeof createUserSchema>;
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
+export type LoginUserInput = z.infer<typeof loginUserSchema>;
 
 class UserRepository extends Crud {
     constructor() {
@@ -33,6 +40,29 @@ class UserRepository extends Crud {
             data.password = await bcrypt.hash(data.password, 10);
         }
         return data;
+    }
+
+   
+    async login(data: unknown, customSchema?: z.ZodSchema) {
+        const schema = customSchema || loginUserSchema;
+        const { username, password } = schema.parse(data) as LoginUserInput;
+
+        const user = await prisma.user.findUnique({
+            where: { username }
+        });
+
+        if (!user) {
+            throw new Error("INVALID_CREDENTIALS");
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (!isPasswordValid) {
+            throw new Error("INVALID_CREDENTIALS");
+        }
+
+        const { password: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
     }
 }
 
