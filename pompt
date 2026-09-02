@@ -747,176 +747,121 @@ Quero um CRUD funcional, integrado com o backend, base de dados, validações, s
 Vou fornecer abaixo os códigos existentes que devem ser analisados antes da implementação.
 
 <referencia>
+import { z } from 'zod';
+import { Crud } from "./base/crud.repository";
+
+export const createCategorySchema = z.object({
+    name: z.string().min(1, "O nome da categoria é obrigatório").max(100, "O nome não pode ultrapassar 100 caracteres")
+});
+
+export const updateCategorySchema = createCategorySchema.partial();
+
+export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
+export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
+
+class CategoryRepository extends Crud {
+    constructor() {
+        super("category", {
+            create: createCategorySchema,
+            update: updateCategorySchema
+        });
+    }
+}
+
+export const categoryRepository = new CategoryRepository();
 
 import { Router, Request, Response } from "express";
-import { userRepository } from "../repository/user.repository";
+import { categoryRepository } from "../repository/category.repository";
 import { errorReport } from "../repository/base/errorHandler.repository";
-import jwt from "jsonwebtoken";
 
-const userRoutes = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "sua_chave_secreta_aqui";
+const categoryRoutes = Router();
 
-// Rota de Login
-userRoutes.post("/users/login", async (req: Request, res: Response) => {
+categoryRoutes.post("/categories", async (req: Request, res: Response) => {
     try {
-        
-        const user = await userRepository.login(req.body);
-
-        // Gera o token JWT com validade (ex: 8 horas)
-        const token = jwt.sign(
-            { id: user.id, username: user.username },
-            JWT_SECRET,
-            { expiresIn: "8h" }
-        );
-
-        return res.status(200).json({
-            token,
-            user
-        });
+        const newCategory = await categoryRepository.create(req.body);
+        return res.status(201).json(newCategory);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-userRoutes.post("/users", async (req: Request, res: Response) => {
+categoryRoutes.get("/categories", async (_req: Request, res: Response) => {
     try {
-        const newUser = await userRepository.create(req.body);
-        return res.status(201).json(newUser);
+        const categories = await categoryRepository.list();
+        return res.status(200).json(categories);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-userRoutes.get("/users", async (_req: Request, res: Response) => {
-    try {
-        const users = await userRepository.list();
-        return res.status(200).json(users);
-    } catch (error) {
-        return errorReport(res, error);
-    }
-});
-
-userRoutes.get("/users/:id", async (req: Request, res: Response) => {
+categoryRoutes.get("/categories/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const user = await userRepository.find(id);
-        return res.status(200).json(user);
+        const category = await categoryRepository.find(id);
+        return res.status(200).json(category);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-userRoutes.put("/users/:id", async (req: Request, res: Response) => {
+categoryRoutes.put("/categories/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const updatedUser = await userRepository.update(id, req.body);
-        return res.status(200).json(updatedUser);
+        const updatedCategory = await categoryRepository.update(id, req.body);
+        return res.status(200).json(updatedCategory);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-userRoutes.delete("/users/:id", async (req: Request, res: Response) => {
+categoryRoutes.delete("/categories/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        await userRepository.delete(id);
+        await categoryRepository.delete(id);
         return res.status(200).json({ message: "Registo apagado com sucesso" });
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-export { userRoutes };
+export { categoryRoutes };
 
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { api } from '@/services/api';
 
-export interface User {
+export interface Category {
   id: number;
-  name?: string | null;
-  username: string;
+  name: string;
 }
 
-export interface RegisterPayload {
+export interface CreateCategoryPayload {
+  name: string;
+}
+
+export interface UpdateCategoryPayload {
   name?: string;
-  username: string;
-  password: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: User;
-}
-
-export const useUserStore = defineStore('user', () => {
-  const currentUser = ref<User | null>(null);
-  const token = ref<string | null>(localStorage.getItem('token'));
+export const useCategoryStore = defineStore('category', () => {
+  const categories = ref<Category[]>([]);
+  const currentCategory = ref<Category | null>(null);
   const isLoading = ref<boolean>(false);
   const error = ref<string | null>(null);
-
-  const isAuthenticated = computed<boolean>(() => !!token.value);
-  const userName = computed<string>(
-    () => currentUser.value?.name || currentUser.value?.username || 'Utilizador'
-  );
-
-  /**
-   * Atualiza a sessão na memória, LocalStorage e nos cabeçalhos HTTP do Axios
-   */
-  function setSession(newToken: string | null, user: User | null): void {
-    token.value = newToken;
-    currentUser.value = user;
-
-    if (newToken) {
-      localStorage.setItem('token', newToken);
-      api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-    } else {
-      localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
-    }
-
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }
 
   function clearError(): void {
     error.value = null;
   }
 
-  async function login(username: string, password: string): Promise<boolean | string> {
+  async function list(): Promise<Category[]> {
     isLoading.value = true;
     error.value = null;
-
     try {
-      const response = await api.post<unknown, AuthResponse>('/auth/login', { username, password });
-      
-      if (response && response.token) {
-        setSession(response.token, response.user);
-        return true;
-      }
-      
-      return 'Resposta inválida do servidor.';
-    } catch (err: any) {
-      const message = err.response?.data?.message || 'Nome de utilizador ou palavra-passe incorretos.';
-      error.value = message;
-      return message;
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  async function register(payload: RegisterPayload): Promise<User> {
-    isLoading.value = true;
-    error.value = null;
-
-    try {
-      const response = await api.post<unknown, User>('/users', payload);
+      const response = await api.get<unknown, Category[]>('/categories');
+      categories.value = response;
       return response;
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Erro ao realizar o cadastro.';
+      const message = err.response?.data?.message || 'Erro ao carregar categorias.';
       error.value = message;
       throw err;
     } finally {
@@ -924,361 +869,82 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  function logout(): void {
-    setSession(null, null);
+  async function find(id: number | string): Promise<Category> {
+    isLoading.value = true;
     error.value = null;
-  }
-
-  /**
-   * Inicializa o estado do utilizador e configura o Token no arranque da aplicação
-   */
-  function initUser(): void {
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-
-    if (savedToken && savedUser) {
-      try {
-        currentUser.value = JSON.parse(savedUser) as User;
-        token.value = savedToken;
-        api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
-      } catch {
-        logout();
-      }
-    } else {
-      logout();
+    try {
+      const response = await api.get<unknown, Category>(`/categories/${id}`);
+      currentCategory.value = response;
+      return response;
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Erro ao procurar categoria.';
+      error.value = message;
+      throw err;
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  // Executa a verificação ao instanciar a store
-  initUser();
+  async function create(payload: CreateCategoryPayload): Promise<Category> {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await api.post<unknown, Category>('/categories', payload);
+      await list();
+      return response;
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Erro ao criar categoria.';
+      error.value = message;
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function update(id: number | string, payload: UpdateCategoryPayload): Promise<Category> {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const response = await api.put<unknown, Category>(`/categories/${id}`, payload);
+      await list();
+      return response;
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Erro ao atualizar categoria.';
+      error.value = message;
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  async function remove(id: number | string): Promise<void> {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      await api.delete(`/categories/${id}`);
+      await list();
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Erro ao eliminar categoria.';
+      error.value = message;
+      throw err;
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   return {
-    currentUser,
-    token,
+    categories,
+    currentCategory,
     isLoading,
     error,
-    isAuthenticated,
-    userName,
     clearError,
-    login,
-    register,
-    logout,
-    initUser
+    list,
+    find,
+    create,
+    update,
+    remove
   };
 });
-
-import { z } from 'zod';
-import bcrypt from 'bcrypt';
-import { Crud } from "./base/crud.repository";
-import { prisma } from '../lib/prisma';
-
-export const createUserSchema = z.object({
-    name: z.string().transform(v => v === "" ? undefined : v).optional(),
-    username: z.string().min(3, "Nome de utilizador é obrigatório"),
-    password: z.string().min(6, "A palavra-passe deve ter pelo menos 6 caracteres")
-});
-
-export const updateUserSchema = createUserSchema.partial();
-
-export const loginUserSchema = z.object({
-    username: z.string().min(1, "O nome de utilizador é obrigatório"),
-    password: z.string().min(1, "A palavra-passe é obrigatória")
-});
-
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;
-export type LoginUserInput = z.infer<typeof loginUserSchema>;
-
-class UserRepository extends Crud {
-    constructor() {
-        super("user", {
-            create: createUserSchema,
-            update: updateUserSchema
-        });
-    }
-
-    protected async beforeCreate(data: any) {
-        if (data.password) {
-            data.password = await bcrypt.hash(data.password, 10);
-        }
-        return data;
-    }
-
-    protected async beforeUpdate(data: any) {
-        if (data.password) {
-            data.password = await bcrypt.hash(data.password, 10);
-        }
-        return data;
-    }
-
-   
-    async login(data: unknown, customSchema?: z.ZodSchema) {
-        const schema = customSchema || loginUserSchema;
-        const { username, password } = schema.parse(data) as LoginUserInput;
-
-        const user = await prisma.user.findUnique({
-            where: { username }
-        });
-
-        if (!user) {
-            throw new Error("INVALID_CREDENTIALS");
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordValid) {
-            throw new Error("INVALID_CREDENTIALS");
-        }
-
-        const { password: _, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-    }
-}
-
-export const userRepository = new UserRepository();
-
-<script setup>
-import { reactive, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import Card from 'primevue/card';
-import InputText from 'primevue/inputtext';
-import Password from 'primevue/password';
-import Button from 'primevue/button';
-import Toast from 'primevue/toast';
-import Badge from 'primevue/badge';
-import { useUserStore } from '@/stores/user.store';
-import { useToast } from 'primevue/usetoast';
-
-const router = useRouter();
-const userStore = useUserStore();
-const toast = useToast();
-
-const form = reactive({
-  name: '',
-  username: '',
-  password: ''
-});
-
-const fieldErrors = ref({
-  name: '',
-  username: '',
-  password: ''
-});
-
-function generateUsername(name) {
-  if (!name) return '';
-  
-  return name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s]/g, '')
-    .replace(/\s+/g, '.');
-}
-
-// Limpa o erro do campo quando o utilizador digita
-function clearFieldError(field) {
-  if (fieldErrors.value[field]) {
-    fieldErrors.value[field] = '';
-  }
-}
-
-watch(
-  () => form.name,
-  (newName) => {
-    form.username = generateUsername(newName);
-    clearFieldError('name');
-    clearFieldError('username');
-  }
-);
-
-watch(
-  () => form.password,
-  () => clearFieldError('password')
-);
-
-function getErrorMessage(errorField) {
-  if (!errorField) return '';
-  return Array.isArray(errorField) ? errorField[0] : errorField;
-}
-
-async function handleRegister() {
-  if (userStore.isLoading) return;
-
-  userStore.isLoading = true;
-  fieldErrors.value = {};
-
-  try {
-    await userStore.register({
-      name: form.name.trim(),
-      username: form.username,
-      password: form.password
-    });
-
-    toast.add({ 
-      severity: 'success', 
-      summary: 'Conta criada!', 
-      detail: 'O seu registo foi concluído com sucesso. Redirecionando...',
-      life: 3000 
-    });
-    
-    setTimeout(() => {
-      router.push('/login');
-    }, 2000);
-  } catch (error) {
-    const responseData = error?.response?.data;
-
-    if (responseData?.errors) {
-      fieldErrors.value = { ...responseData.errors };
-    }
-
-    toast.add({ 
-      severity: 'error', 
-      summary: 'Erro no Registo', 
-      detail: responseData?.message || 'Por favor, verifique os campos destacados.',
-      life: 4000 
-    });
-  } finally {
-    userStore.isLoading = false;
-  }
-}
-</script>
-
-<template>
-  <Toast position="top-right" />
-
-  <main class="auth-wrapper">
-    <div class="auth-container">
-      <Card class="auth-card" role="region" aria-labelledby="auth-title">
-        <template #title>
-          <header class="auth-header">
-            <div class="auth-icon-badge" aria-hidden="true">
-              <i class="pi pi-user-plus"></i>
-            </div>
-            <h1 id="auth-title">Criar Conta</h1>
-            <p>Registe-se para acompanhar e otimizar o seu consumo.</p>
-          </header>
-        </template>
-        
-        <template #content>
-          <form @submit.prevent="handleRegister" class="form-grid" novalidate>
-            
-            <!-- Campo: Nome -->
-            <div class="field">
-              <label for="name" class="required-label">Nome Completo</label>
-              <div class="p-input-icon-left">
-                <i class="pi pi-user" />
-                <InputText 
-                  id="name" 
-                  v-model="form.name" 
-                  placeholder="Ex: João Silva" 
-                  class="w-full"
-                  :invalid="!!fieldErrors.name"
-                  :aria-invalid="!!fieldErrors.name"
-                  aria-describedby="name-error"
-                  autocomplete="name"
-                  required
-                />
-              </div>
-              <small id="name-error" v-if="fieldErrors.name" class="p-error-message" role="alert">
-                <i class="pi pi-exclamation-circle"></i>
-                <span>{{ getErrorMessage(fieldErrors.name) }}</span>
-              </small>
-            </div>
-
-            <!-- Campo: Nome de Utilizador (Gerado) -->
-            <div class="field">
-              <div class="label-with-badge">
-                <label for="username">Nome de utilizador</label>
-                <Badge value="Automático" severity="secondary" class="auto-badge" />
-              </div>
-              <div class="p-input-icon-left">
-                <i class="pi pi-at" />
-                <InputText 
-                  id="username" 
-                  v-model="form.username" 
-                  disabled
-                  placeholder="joao.silva" 
-                  class="w-full disabled-input" 
-                  :invalid="!!fieldErrors.username"
-                  :aria-invalid="!!fieldErrors.username"
-                  aria-describedby="username-error username-help"
-                />
-              </div>
-              <small id="username-help" class="field-help">Gerado automaticamente a partir do seu nome.</small>
-              <small id="username-error" v-if="fieldErrors.username" class="p-error-message" role="alert">
-                <i class="pi pi-exclamation-circle"></i>
-                <span>{{ getErrorMessage(fieldErrors.username) }}</span>
-              </small>
-            </div>
-            
-            <!-- Campo: Palavra-Passe -->
-            <div class="field">
-              <label for="password" class="required-label">Palavra-passe</label>
-              <Password 
-                id="password" 
-                v-model="form.password" 
-                toggleMask 
-                promptLabel="Escolha uma palavra-passe"
-                weakLabel="Fraca"
-                mediumLabel="Aceitável"
-                strongLabel="Forte"
-                placeholder="Crie uma palavra-passe segura"
-                class="w-full"
-                inputClass="w-full"
-                :invalid="!!fieldErrors.password"
-                :aria-invalid="!!fieldErrors.password"
-                aria-describedby="password-error"
-                autocomplete="new-password"
-                required
-              >
-                <template #header>
-                  <div class="password-header-title">Requisitos da palavra-passe</div>
-                </template>
-                <template #footer>
-                  <ul class="password-requirements">
-                    <li>Mínimo de 8 caracteres</li>
-                    <li>Inclua letras e números</li>
-                  </ul>
-                </template>
-              </Password>
-              <small id="password-error" v-if="fieldErrors.password" class="p-error-message" role="alert">
-                <i class="pi pi-exclamation-circle"></i>
-                <span>{{ getErrorMessage(fieldErrors.password) }}</span>
-              </small>
-            </div>
-
-            <!-- Botão Principal -->
-            <Button 
-              type="submit" 
-              label="Criar conta" 
-              icon="pi pi-user-plus" 
-              class="w-full submit-btn p-button-primary" 
-              :loading="userStore.isLoading"
-              :disabled="userStore.isLoading"
-            />
-          </form>
-
-          <div class="auth-footer">
-            <span>Já tem uma conta?</span>
-            <Button 
-              label="Iniciar sessão" 
-              link 
-              class="login-link-btn"
-              @click="router.push('/login')" 
-            />
-          </div>
-        </template>
-      </Card>
-
-      <p class="auth-copyright">
-        Acesso seguro e controlo inteligente de consumo
-      </p>
-    </div>
-  </main>
-</template>
-
 </referencia>
 
 ---
@@ -1297,3 +963,1067 @@ A estilização não deve falhar por favor
 O MODEL SERÁ ENVIADO NA PRÓXIMA MENSAGEM.
 
 </model>
+
+
+<design>
+
+<script setup>
+import { ref, reactive, onMounted } from 'vue';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
+import Tag from 'primevue/tag';
+import { useCategoryStore } from '@/stores/category.store';
+import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
+
+const categoryStore = useCategoryStore();
+const toast = useToast();
+const confirm = useConfirm();
+
+const isDialogVisible = ref(false);
+const isEditing = ref(false);
+const editingId = ref(null);
+
+// Estados para pesquisa e paginação
+const searchQuery = ref('');
+const rowsPerPage = ref(10);
+
+const form = reactive({
+  name: ''
+});
+
+const fieldErrors = ref({
+  name: ''
+});
+
+function clearFieldError(field) {
+  if (fieldErrors.value[field]) {
+    fieldErrors.value[field] = '';
+  }
+}
+
+function getErrorMessage(errorField) {
+  if (!errorField) return '';
+  return Array.isArray(errorField) ? errorField[0] : errorField;
+}
+
+function openCreateDialog() {
+  isEditing.value = false;
+  editingId.value = null;
+  form.name = '';
+  fieldErrors.value = {};
+  isDialogVisible.value = true;
+}
+
+function openEditDialog(category) {
+  isEditing.value = true;
+  editingId.value = category.id;
+  form.name = category.name;
+  fieldErrors.value = {};
+  isDialogVisible.value = true;
+}
+
+async function handleSave() {
+  if (categoryStore.isLoading) return;
+
+  fieldErrors.value = {};
+
+  try {
+    const payload = {
+      name: form.name.trim()
+    };
+
+    if (isEditing.value) {
+      await categoryStore.update(editingId.value, payload);
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Categoria atualizada com sucesso.',
+        life: 3000
+      });
+    } else {
+      await categoryStore.create(payload);
+      toast.add({
+        severity: 'success',
+        summary: 'Sucesso',
+        detail: 'Categoria criada com sucesso.',
+        life: 3000
+      });
+    }
+
+    isDialogVisible.value = false;
+  } catch (error) {
+    const responseData = error?.response?.data;
+
+    if (responseData?.errors) {
+      fieldErrors.value = { ...responseData.errors };
+    }
+
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: responseData?.message || 'Por favor, verifique os campos destacados.',
+      life: 4000
+    });
+  }
+}
+
+function confirmDelete(category) {
+  confirm.require({
+    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta ação não pode ser desfeita.`,
+    header: 'Confirmar Eliminação',
+    icon: 'pi pi-exclamation-triangle',
+    rejectClass: 'p-button-secondary p-button-outlined',
+    acceptClass: 'p-button-danger',
+    acceptLabel: 'Eliminar',
+    rejectLabel: 'Cancelar',
+    accept: async () => {
+      try {
+        await categoryStore.remove(category.id);
+        toast.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Registo apagado com sucesso.',
+          life: 3000
+        });
+      } catch (error) {
+        const responseData = error?.response?.data;
+        toast.add({
+          severity: 'error',
+          summary: 'Erro',
+          detail: responseData?.message || 'Não foi possível eliminar a categoria.',
+          life: 4000
+        });
+      }
+    }
+  });
+}
+
+async function reloadCategories() {
+  try {
+    await categoryStore.list();
+  } catch (error) {
+    toast.add({
+      severity: 'error',
+      summary: 'Erro',
+      detail: 'Não foi possível carregar as categorias.',
+      life: 4000
+    });
+  }
+}
+
+onMounted(async () => {
+  await reloadCategories();
+});
+</script>
+
+<template>
+  <Toast position="top-right" />
+  <ConfirmDialog />
+
+  <section class="category-page">
+    <!-- Cabeçalho da Página -->
+    <header class="page-heading">
+      <div class="heading-content">
+        <div class="title-with-badge">
+          <h1>Categorias</h1>
+          <Tag 
+            v-if="categoryStore.categories" 
+            :value="categoryStore.categories.length" 
+            severity="info" 
+            class="count-badge"
+            aria-label="Total de categorias"
+          />
+        </div>
+        <p>Organize e gira os tipos de consumo e despesas do sistema.</p>
+      </div>
+      <div class="heading-actions">
+        <Button 
+          label="Nova categoria" 
+          icon="pi pi-plus" 
+          class="p-button-primary btn-add"
+          :disabled="categoryStore.isLoading"
+          @click="openCreateDialog" 
+        />
+      </div>
+    </header>
+
+    <!-- Card da Tabela e Conteúdo -->
+    <Card class="table-card border-none shadow-1">
+      <template #content>
+        <DataTable 
+          :value="categoryStore.categories" 
+          :loading="categoryStore.isLoading"
+          :globalFilterFields="['name', 'id']"
+          :filters="{ global: { value: searchQuery, matchMode: 'contains' } }"
+          responsiveLayout="scroll"
+          paginator
+          v-model:rows="rowsPerPage"
+          :rowsPerPageOptions="[5, 10, 20, 50]"
+          paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+          currentPageReportTemplate="A mostrar {first} até {last} de {totalRecords} categorias"
+          emptyMessage="Nenhuma categoria encontrada."
+          class="custom-datatable p-datatable-sm"
+          dataKey="id"
+        >
+          <template #header>
+            <div class="table-header">
+              <div class="search-container">
+                <i class="pi pi-search search-icon" aria-hidden="true" />
+                <InputText 
+                  v-model="searchQuery" 
+                  placeholder="Pesquisar por ID ou nome..." 
+                  class="search-input"
+                  aria-label="Pesquisar categorias"
+                />
+                <Button 
+                  v-if="searchQuery" 
+                  icon="pi pi-times" 
+                  class="p-button-text p-button-rounded clear-search-btn" 
+                  aria-label="Limpar pesquisa"
+                  @click="searchQuery = ''"
+                />
+              </div>
+              <Button 
+                icon="pi pi-refresh" 
+                class="p-button-text p-button-secondary p-button-rounded refresh-btn" 
+                v-tooltip.top="'Atualizar lista'"
+                aria-label="Atualizar lista de categorias"
+                :loading="categoryStore.isLoading"
+                @click="reloadCategories"
+              />
+            </div>
+          </template>
+
+          <template #loading>
+            <div class="table-loading-state">
+              <i class="pi pi-spin pi-spinner text-2xl text-primary mb-2"></i>
+              <span>A carregar categorias...</span>
+            </div>
+          </template>
+
+          <template #empty>
+            <div class="empty-state">
+              <div class="empty-icon-wrapper">
+                <i class="pi pi-folder-open"></i>
+              </div>
+              <p class="empty-title">Nenhuma categoria encontrada</p>
+              <p class="empty-subtitle" v-if="searchQuery">
+                Nenhum resultado corresponde à pesquisa "<strong>{{ searchQuery }}</strong>".
+              </p>
+              <p class="empty-subtitle" v-else>
+                Comece por adicionar a primeira categoria ao sistema.
+              </p>
+              <Button 
+                v-if="!searchQuery"
+                label="Criar Categoria" 
+                icon="pi pi-plus" 
+                class="p-button-outlined p-button-sm mt-3"
+                @click="openCreateDialog" 
+              />
+              <Button 
+                v-else
+                label="Limpar Pesquisa" 
+                icon="pi pi-filter-slash" 
+                class="p-button-text p-button-sm mt-3"
+                @click="searchQuery = ''" 
+              />
+            </div>
+          </template>
+
+          <Column field="id" header="ID" style="width: 110px" sortable>
+            <template #body="{ data }">
+              <span class="id-badge">#{{ data.id }}</span>
+            </template>
+          </Column>
+
+          <Column field="name" header="Categoria" sortable>
+            <template #body="{ data }">
+              <span class="category-name-cell">{{ data.name }}</span>
+            </template>
+          </Column>
+
+          <Column header="Ações" style="width: 140px; text-align: center">
+            <template #body="{ data }">
+              <div class="action-buttons">
+                <Button 
+                  icon="pi pi-pencil" 
+                  class="p-button-text p-button-rounded p-button-warning action-btn"
+                  v-tooltip.top="'Editar'"
+                  aria-label="Editar Categoria"
+                  @click="openEditDialog(data)"
+                />
+                <Button 
+                  icon="pi pi-trash" 
+                  class="p-button-text p-button-rounded p-button-danger action-btn"
+                  v-tooltip.top="'Eliminar'"
+                  aria-label="Eliminar Categoria"
+                  @click="confirmDelete(data)"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </template>
+    </Card>
+
+    <!-- Dialog de Criação / Edição -->
+    <Dialog 
+      v-model:visible="isDialogVisible" 
+      :header="isEditing ? 'Editar Categoria' : 'Nova Categoria'" 
+      :modal="true"
+      :dismissableMask="!categoryStore.isLoading"
+      :closable="!categoryStore.isLoading"
+      class="category-dialog"
+      style="width: 100%; max-width: 460px"
+    >
+      <form @submit.prevent="handleSave" class="form-grid" novalidate>
+        <div class="field">
+          <label for="category-name" class="required-label font-medium text-sm">Nome da Categoria</label>
+          <div class="input-wrapper">
+            <InputText 
+              id="category-name" 
+              v-model="form.name" 
+              placeholder="Ex: Alimentação, Transporte, Saúde" 
+              class="w-full search-input-field"
+              :class="{ 'p-invalid': !!fieldErrors.name }"
+              :invalid="!!fieldErrors.name"
+              :aria-invalid="!!fieldErrors.name"
+              aria-describedby="category-name-error"
+              :disabled="categoryStore.isLoading"
+              @input="clearFieldError('name')"
+              required
+              autofocus
+            />
+          </div>
+          <small id="category-name-error" v-if="fieldErrors.name" class="p-error-message" role="alert">
+            <i class="pi pi-exclamation-circle"></i>
+            <span>{{ getErrorMessage(fieldErrors.name) }}</span>
+          </small>
+        </div>
+
+        <div class="dialog-footer">
+          <Button 
+            type="button" 
+            label="Cancelar" 
+            class="p-button-text p-button-secondary" 
+            :disabled="categoryStore.isLoading"
+            @click="isDialogVisible = false" 
+          />
+          <Button 
+            type="submit" 
+            :label="isEditing ? 'Atualizar' : 'Guardar'" 
+            :icon="categoryStore.isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'" 
+            class="p-button-primary" 
+            :loading="categoryStore.isLoading"
+            :disabled="categoryStore.isLoading || !form.name.trim()"
+          />
+        </div>
+      </form>
+    </Dialog>
+  </section>
+</template>
+
+<style scoped>
+/* Transições Globais e Animação de Entrada */
+.category-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 200ms ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cabeçalho da Página */
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.heading-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-heading h1 {
+  font-size: 1.625rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.02em;
+  color: var(--text-color, #1f2937);
+}
+
+.count-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.15rem 0.6rem;
+}
+
+.page-heading p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+.btn-add {
+  font-weight: 600;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.btn-add:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-add:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Estilo do Card Container */
+.table-card {
+  border-radius: 12px;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, rgba(229, 231, 235, 0.8));
+  overflow: hidden;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+:deep(.p-card-body) {
+  padding: 0;
+}
+
+:deep(.p-card-content) {
+  padding: 0;
+}
+
+/* Tabela e Cabeçalhos */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  background: var(--surface-section, #fafafa);
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--text-color-secondary, #9ca3af);
+  pointer-events: none;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.5rem;
+  padding-right: 2.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+  background: var(--surface-overlay, #ffffff);
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px var(--primary-color-focus, rgba(59, 130, 246, 0.15));
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.25rem;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  padding: 0 !important;
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.refresh-btn {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  transition: transform 200ms ease;
+}
+
+.refresh-btn:hover {
+  transform: rotate(45deg);
+}
+
+/* Ajustes nas Linhas e Células */
+.custom-datatable :deep(.p-datatable-thead > tr > th) {
+  background: var(--surface-section, #fafafa);
+  color: var(--text-color-secondary, #4b5563);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #e5e7eb);
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr) {
+  transition: background-color 150ms ease;
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr > td) {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  vertical-align: middle;
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr:hover) {
+  background-color: var(--surface-hover, rgba(0, 0, 0, 0.015));
+}
+
+.id-badge {
+  font-family: var(--font-family-monospace, monospace);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-color-secondary, #6b7280);
+  background: var(--surface-ground, #f3f4f6);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.category-name-cell {
+  font-weight: 500;
+  color: var(--text-color, #111827);
+  font-size: 0.9375rem;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.action-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Empty State e Loading State */
+.table-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.875rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+}
+
+.empty-icon-wrapper {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--surface-ground, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.empty-icon-wrapper i {
+  font-size: 1.5rem;
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-color, #374151);
+}
+
+.empty-subtitle {
+  font-size: 0.875rem;
+  margin: 0;
+  color: var(--text-color-secondary, #6b7280);
+  max-width: 360px;
+}
+
+/* Dialog */
+.category-dialog :deep(.p-dialog-header) {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  font-weight: 600;
+}
+
+.category-dialog :deep(.p-dialog-content) {
+  padding: 1.5rem;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.required-label::after {
+  content: ' *';
+  color: var(--red-500, #ef4444);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.p-error-message {
+  color: var(--red-500, #ef4444);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  margin-top: 0.15rem;
+  animation: fadeIn 150ms ease;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--surface-border, #f3f4f6);
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+  .page-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heading-actions {
+    width: 100%;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-container {
+    max-width: 100%;
+  }
+
+  .custom-datatable :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.75rem 0.875rem;
+  }
+}
+</style>
+
+</model>
+
+<style scoped>
+/* Transições Globais e Animação de Entrada */
+.category-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 200ms ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cabeçalho da Página */
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.heading-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-heading h1 {
+  font-size: 1.625rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.02em;
+  color: var(--text-color, #1f2937);
+}
+
+.count-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.15rem 0.6rem;
+}
+
+.page-heading p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+.btn-add {
+  font-weight: 600;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.btn-add:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-add:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Estilo do Card Container */
+.table-card {
+  border-radius: 12px;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, rgba(229, 231, 235, 0.8));
+  overflow: hidden;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+:deep(.p-card-body) {
+  padding: 0;
+}
+
+:deep(.p-card-content) {
+  padding: 0;
+}
+
+/* Tabela e Cabeçalhos */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  background: var(--surface-section, #fafafa);
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--text-color-secondary, #9ca3af);
+  pointer-events: none;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.5rem;
+  padding-right: 2.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+  background: var(--surface-overlay, #ffffff);
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px var(--primary-color-focus, rgba(59, 130, 246, 0.15));
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.25rem;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  padding: 0 !important;
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.refresh-btn {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  transition: transform 200ms ease;
+}
+
+.refresh-btn:hover {
+  transform: rotate(45deg);
+}
+
+/* Ajustes nas Linhas e Células */
+.custom-datatable :deep(.p-datatable-thead > tr > th) {
+  background: var(--surface-section, #fafafa);
+  color: var(--text-color-secondary, #4b5563);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #e5e7eb);
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr) {
+  transition: background-color 150ms ease;
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr > td) {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  vertical-align: middle;
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr:hover) {
+  background-color: var(--surface-hover, rgba(0, 0, 0, 0.015));
+}
+
+.id-badge {
+  font-family: var(--font-family-monospace, monospace);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-color-secondary, #6b7280);
+  background: var(--surface-ground, #f3f4f6);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.category-name-cell {
+  font-weight: 500;
+  color: var(--text-color, #111827);
+  font-size: 0.9375rem;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.action-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Empty State e Loading State */
+.table-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.875rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+}
+
+.empty-icon-wrapper {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--surface-ground, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.empty-icon-wrapper i {
+  font-size: 1.5rem;
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-color, #374151);
+}
+
+.empty-subtitle {
+  font-size: 0.875rem;
+  margin: 0;
+  color: var(--text-color-secondary, #6b7280);
+  max-width: 360px;
+}
+
+/* Dialog */
+.category-dialog :deep(.p-dialog-header) {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  font-weight: 600;
+}
+
+.category-dialog :deep(.p-dialog-content) {
+  padding: 1.5rem;
+}
+
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.required-label::after {
+  content: ' *';
+  color: var(--red-500, #ef4444);
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.p-error-message {
+  color: var(--red-500, #ef4444);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  margin-top: 0.15rem;
+  animation: fadeIn 150ms ease;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--surface-border, #f3f4f6);
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+  .page-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heading-actions {
+    width: 100%;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-container {
+    max-width: 100%;
+  }
+
+  .custom-datatable :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.75rem 0.875rem;
+  }
+}
+</style>
