@@ -8,6 +8,7 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
+import Tag from 'primevue/tag';
 import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
@@ -19,6 +20,10 @@ const confirm = useConfirm();
 const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
+
+// Estados para pesquisa e paginação
+const searchQuery = ref('');
+const rowsPerPage = ref(10);
 
 const form = reactive({
   name: ''
@@ -102,7 +107,7 @@ async function handleSave() {
 
 function confirmDelete(category) {
   confirm.require({
-    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"?`,
+    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta ação não pode ser desfeita.`,
     header: 'Confirmar Eliminação',
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-secondary p-button-outlined',
@@ -131,7 +136,7 @@ function confirmDelete(category) {
   });
 }
 
-onMounted(async () => {
+async function reloadCategories() {
   try {
     await categoryStore.list();
   } catch (error) {
@@ -142,6 +147,10 @@ onMounted(async () => {
       life: 4000
     });
   }
+}
+
+onMounted(async () => {
+  await reloadCategories();
 });
 </script>
 
@@ -150,43 +159,141 @@ onMounted(async () => {
   <ConfirmDialog />
 
   <section class="category-page">
-    <div class="page-heading">
-      <div>
-        <h1>Categorias</h1>
-        <p>Organize os tipos de consumo do sistema.</p>
+    <!-- Cabeçalho da Página -->
+    <header class="page-heading">
+      <div class="heading-content">
+        <div class="title-with-badge">
+          <h1>Categorias</h1>
+          <Tag 
+            v-if="categoryStore.categories" 
+            :value="categoryStore.categories.length" 
+            severity="info" 
+            class="count-badge"
+            aria-label="Total de categorias"
+          />
+        </div>
+        <p>Organize e gira os tipos de consumo e despesas do sistema.</p>
       </div>
-      <Button 
-        label="Nova categoria" 
-        icon="pi pi-plus" 
-        class="p-button-primary"
-        @click="openCreateDialog" 
-      />
-    </div>
+      <div class="heading-actions">
+        <Button 
+          label="Nova categoria" 
+          icon="pi pi-plus" 
+          class="p-button-primary btn-add"
+          :disabled="categoryStore.isLoading"
+          @click="openCreateDialog" 
+        />
+      </div>
+    </header>
 
-    <Card>
+    <!-- Card da Tabela e Conteúdo -->
+    <Card class="table-card border-none shadow-1">
       <template #content>
         <DataTable 
           :value="categoryStore.categories" 
           :loading="categoryStore.isLoading"
+          :globalFilterFields="['name', 'id']"
+          :filters="{ global: { value: searchQuery, matchMode: 'contains' } }"
           responsiveLayout="scroll"
           paginator
-          :rows="10"
+          v-model:rows="rowsPerPage"
+          :rowsPerPageOptions="[5, 10, 20, 50]"
+          paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+          currentPageReportTemplate="A mostrar {first} até {last} de {totalRecords} categorias"
           emptyMessage="Nenhuma categoria encontrada."
+          class="custom-datatable p-datatable-sm"
+          dataKey="id"
         >
-          <Column field="id" header="ID" style="width: 100px" />
-          <Column field="name" header="Categoria" sortable />
-          <Column header="Ações" style="width: 150px; text-align: center">
+          <template #header>
+            <div class="table-header">
+              <div class="search-container">
+                <i class="pi pi-search search-icon" aria-hidden="true" />
+                <InputText 
+                  v-model="searchQuery" 
+                  placeholder="Pesquisar por ID ou nome..." 
+                  class="search-input"
+                  aria-label="Pesquisar categorias"
+                />
+                <Button 
+                  v-if="searchQuery" 
+                  icon="pi pi-times" 
+                  class="p-button-text p-button-rounded clear-search-btn" 
+                  aria-label="Limpar pesquisa"
+                  @click="searchQuery = ''"
+                />
+              </div>
+              <Button 
+                icon="pi pi-refresh" 
+                class="p-button-text p-button-secondary p-button-rounded refresh-btn" 
+                v-tooltip.top="'Atualizar lista'"
+                aria-label="Atualizar lista de categorias"
+                :loading="categoryStore.isLoading"
+                @click="reloadCategories"
+              />
+            </div>
+          </template>
+
+          <template #loading>
+            <div class="table-loading-state">
+              <i class="pi pi-spin pi-spinner text-2xl text-primary mb-2"></i>
+              <span>A carregar categorias...</span>
+            </div>
+          </template>
+
+          <template #empty>
+            <div class="empty-state">
+              <div class="empty-icon-wrapper">
+                <i class="pi pi-folder-open"></i>
+              </div>
+              <p class="empty-title">Nenhuma categoria encontrada</p>
+              <p class="empty-subtitle" v-if="searchQuery">
+                Nenhum resultado corresponde à pesquisa "<strong>{{ searchQuery }}</strong>".
+              </p>
+              <p class="empty-subtitle" v-else>
+                Comece por adicionar a primeira categoria ao sistema.
+              </p>
+              <Button 
+                v-if="!searchQuery"
+                label="Criar Categoria" 
+                icon="pi pi-plus" 
+                class="p-button-outlined p-button-sm mt-3"
+                @click="openCreateDialog" 
+              />
+              <Button 
+                v-else
+                label="Limpar Pesquisa" 
+                icon="pi pi-filter-slash" 
+                class="p-button-text p-button-sm mt-3"
+                @click="searchQuery = ''" 
+              />
+            </div>
+          </template>
+
+          <Column field="id" header="ID" style="width: 110px" sortable>
+            <template #body="{ data }">
+              <span class="id-badge">#{{ data.id }}</span>
+            </template>
+          </Column>
+
+          <Column field="name" header="Categoria" sortable>
+            <template #body="{ data }">
+              <span class="category-name-cell">{{ data.name }}</span>
+            </template>
+          </Column>
+
+          <Column header="Ações" style="width: 140px; text-align: center">
             <template #body="{ data }">
               <div class="action-buttons">
                 <Button 
                   icon="pi pi-pencil" 
-                  class="p-button-text p-button-rounded p-button-warning"
+                  class="p-button-text p-button-rounded p-button-warning action-btn"
+                  v-tooltip.top="'Editar'"
                   aria-label="Editar Categoria"
                   @click="openEditDialog(data)"
                 />
                 <Button 
                   icon="pi pi-trash" 
-                  class="p-button-text p-button-rounded p-button-danger"
+                  class="p-button-text p-button-rounded p-button-danger action-btn"
+                  v-tooltip.top="'Eliminar'"
                   aria-label="Eliminar Categoria"
                   @click="confirmDelete(data)"
                 />
@@ -197,28 +304,35 @@ onMounted(async () => {
       </template>
     </Card>
 
+    <!-- Dialog de Criação / Edição -->
     <Dialog 
       v-model:visible="isDialogVisible" 
       :header="isEditing ? 'Editar Categoria' : 'Nova Categoria'" 
       :modal="true"
+      :dismissableMask="!categoryStore.isLoading"
+      :closable="!categoryStore.isLoading"
       class="category-dialog"
-      style="width: 100%; max-width: 450px"
+      style="width: 100%; max-width: 460px"
     >
       <form @submit.prevent="handleSave" class="form-grid" novalidate>
         <div class="field">
-          <label for="category-name" class="required-label">Nome da Categoria</label>
-          <InputText 
-            id="category-name" 
-            v-model="form.name" 
-            placeholder="Ex: Alimentação" 
-            class="w-full"
-            :invalid="!!fieldErrors.name"
-            :aria-invalid="!!fieldErrors.name"
-            aria-describedby="category-name-error"
-            @input="clearFieldError('name')"
-            required
-            autofocus
-          />
+          <label for="category-name" class="required-label font-medium text-sm">Nome da Categoria</label>
+          <div class="input-wrapper">
+            <InputText 
+              id="category-name" 
+              v-model="form.name" 
+              placeholder="Ex: Alimentação, Transporte, Saúde" 
+              class="w-full search-input-field"
+              :class="{ 'p-invalid': !!fieldErrors.name }"
+              :invalid="!!fieldErrors.name"
+              :aria-invalid="!!fieldErrors.name"
+              aria-describedby="category-name-error"
+              :disabled="categoryStore.isLoading"
+              @input="clearFieldError('name')"
+              required
+              autofocus
+            />
+          </div>
           <small id="category-name-error" v-if="fieldErrors.name" class="p-error-message" role="alert">
             <i class="pi pi-exclamation-circle"></i>
             <span>{{ getErrorMessage(fieldErrors.name) }}</span>
@@ -229,16 +343,17 @@ onMounted(async () => {
           <Button 
             type="button" 
             label="Cancelar" 
-            class="p-button-text" 
+            class="p-button-text p-button-secondary" 
+            :disabled="categoryStore.isLoading"
             @click="isDialogVisible = false" 
           />
           <Button 
             type="submit" 
             :label="isEditing ? 'Atualizar' : 'Guardar'" 
-            icon="pi pi-check" 
+            :icon="categoryStore.isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'" 
             class="p-button-primary" 
             :loading="categoryStore.isLoading"
-            :disabled="categoryStore.isLoading"
+            :disabled="categoryStore.isLoading || !form.name.trim()"
           />
         </div>
       </form>
@@ -247,42 +362,283 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+/* Transições Globais e Animação de Entrada */
 .category-page {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  animation: fadeIn 200ms ease-in-out;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cabeçalho da Página */
 .page-heading {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 1.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.heading-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.title-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .page-heading h1 {
-  font-size: 1.75rem;
+  font-size: 1.625rem;
   font-weight: 700;
   margin: 0;
+  letter-spacing: -0.02em;
+  color: var(--text-color, #1f2937);
+}
+
+.count-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.15rem 0.6rem;
 }
 
 .page-heading p {
-  margin: 0.25rem 0 0 0;
-  color: var(--text-color-secondary, #6c757d);
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+.btn-add {
+  font-weight: 600;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.btn-add:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-add:not(:disabled):active {
+  transform: translateY(0);
+}
+
+/* Estilo do Card Container */
+.table-card {
+  border-radius: 12px;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--surface-border, rgba(229, 231, 235, 0.8));
+  overflow: hidden;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+:deep(.p-card-body) {
+  padding: 0;
+}
+
+:deep(.p-card-content) {
+  padding: 0;
+}
+
+/* Tabela e Cabeçalhos */
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  background: var(--surface-section, #fafafa);
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 340px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--text-color-secondary, #9ca3af);
+  pointer-events: none;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding-left: 2.5rem;
+  padding-right: 2.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+  background: var(--surface-overlay, #ffffff);
+}
+
+.search-input:focus {
+  box-shadow: 0 0 0 3px var(--primary-color-focus, rgba(59, 130, 246, 0.15));
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.25rem;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  padding: 0 !important;
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.refresh-btn {
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  transition: transform 200ms ease;
+}
+
+.refresh-btn:hover {
+  transform: rotate(45deg);
+}
+
+/* Ajustes nas Linhas e Células */
+.custom-datatable :deep(.p-datatable-thead > tr > th) {
+  background: var(--surface-section, #fafafa);
+  color: var(--text-color-secondary, #4b5563);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #e5e7eb);
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr) {
+  transition: background-color 150ms ease;
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr > td) {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  vertical-align: middle;
+}
+
+.custom-datatable :deep(.p-datatable-tbody > tr:hover) {
+  background-color: var(--surface-hover, rgba(0, 0, 0, 0.015));
+}
+
+.id-badge {
+  font-family: var(--font-family-monospace, monospace);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-color-secondary, #6b7280);
+  background: var(--surface-ground, #f3f4f6);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+}
+
+.category-name-cell {
+  font-weight: 500;
+  color: var(--text-color, #111827);
+  font-size: 0.9375rem;
 }
 
 .action-buttons {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
+}
+
+.action-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  transition: transform 150ms ease, background-color 150ms ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Empty State e Loading State */
+.table-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.875rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1.5rem;
+  text-align: center;
+}
+
+.empty-icon-wrapper {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: var(--surface-ground, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.empty-icon-wrapper i {
+  font-size: 1.5rem;
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.empty-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-color, #374151);
+}
+
+.empty-subtitle {
+  font-size: 0.875rem;
+  margin: 0;
+  color: var(--text-color-secondary, #6b7280);
+  max-width: 360px;
+}
+
+/* Dialog */
+.category-dialog :deep(.p-dialog-header) {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  font-weight: 600;
+}
+
+.category-dialog :deep(.p-dialog-content) {
+  padding: 1.5rem;
 }
 
 .form-grid {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding-top: 0.5rem;
 }
 
 .field {
@@ -296,22 +652,59 @@ onMounted(async () => {
   color: var(--red-500, #ef4444);
 }
 
+.input-wrapper {
+  position: relative;
+}
+
 .p-error-message {
   color: var(--red-500, #ef4444);
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  margin-top: 0.15rem;
+  animation: fadeIn 150ms ease;
 }
 
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--surface-border, #f3f4f6);
 }
 
 .w-full {
   width: 100%;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+  .page-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .heading-actions {
+    width: 100%;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .table-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-container {
+    max-width: 100%;
+  }
+
+  .custom-datatable :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.75rem 0.875rem;
+  }
 }
 </style>
