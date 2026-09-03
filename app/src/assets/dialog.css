@@ -1,0 +1,97 @@
+/* Fundo/borda/cor do dialog: cobre .p-dialog (v3/v4) e a classe custom */
+:deep(.p-dialog),
+:deep(.p-confirm-dialog),
+:deep(.p-confirmdialog),
+:deep(.custom-dark-dialog.p-dialog) {
+  background: var(--surface-card, #1e293b) !important;
+  border: 1px solid var(--surface-border, #334155) !important;
+  color: var(--text-color, #f8fafc) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+:deep(.p-dialog .p-dialog-header),
+:deep(.custom-dark-dialog .p-dialog-header) {
+  background: var(--surface-card, #1e293b) !important;
+  color: var(--text-color, #f8fafc) !important;
+  border-bottom: 1px solid var(--surface-border, #334155) !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+:deep(.p-dialog .p-dialog-title),
+:deep(.custom-dark-dialog .p-dialog-header .p-dialog-title) {
+  color: var(--text-color, #f8fafc) !important;
+  font-weight: 600 !important;
+}
+
+/* Botões do header: cobre nomenclatura antiga (p-dialog-header-icon)
+   e a nova do PrimeVue 4 (p-dialog-close-button / p-dialog-maximize-button) */
+:deep(.p-dialog .p-dialog-header-icon),
+:deep(.p-dialog .p-dialog-close-button),
+:deep(.p-dialog .p-dialog-maximize-button),
+:deep(.custom-dark-dialog .p-dialog-header-actions button) {
+  color: var(--text-color-secondary, #94a3b8) !important;
+}
+
+:deep(.p-dialog .p-dialog-header-icon:hover),
+:deep(.p-dialog .p-dialog-close-button:hover),
+:deep(.p-dialog .p-dialog-maximize-button:hover),
+:deep(.custom-dark-dialog .p-dialog-header-actions button:hover) {
+  background: var(--surface-hover, #334155) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+:deep(.p-dialog .p-dialog-content),
+:deep(.custom-dark-dialog .p-dialog-content) {
+  background: var(--surface-card, #1e293b) !important;
+  color: var(--text-color, #f8fafc) !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+:deep(.p-dialog .p-dialog-footer),
+:deep(.custom-dark-dialog .p-dialog-footer) {
+  background: var(--surface-card, #1e293b) !important;
+  border-top: 1px solid var(--surface-border, #334155) !important;
+  padding: 1rem 1.5rem !important;
+}
+
+:deep(.p-confirm-dialog-message),
+:deep(.p-confirmdialog-message) {
+  color: var(--text-color, #f8fafc) !important;
+}
+
+:deep(.p-dropdown-panel),
+:deep(.p-select-overlay),
+:deep(.p-popover) {
+  background: var(--surface-card, #1e293b) !important;
+  border: 1px solid var(--surface-border, #334155) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+:deep(.p-dropdown-panel .p-dropdown-items),
+:deep(.p-select-overlay .p-select-list) {
+  padding: 0.35rem !important;
+  background: var(--surface-card, #1e293b) !important;
+}
+
+:deep(.p-dropdown-panel .p-dropdown-item),
+:deep(.p-select-overlay .p-select-option) {
+  color: var(--text-color, #f8fafc) !important;
+  background: transparent !important;
+  border-radius: 6px !important;
+  padding: 0.5rem 0.75rem !important;
+  margin-bottom: 2px !important;
+}
+
+:deep(.p-dropdown-panel .p-dropdown-item:hover),
+:deep(.p-select-overlay .p-select-option:hover) {
+  background: var(--surface-hover, #334155) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+:deep(.p-dropdown-panel .p-dropdown-item.p-highlight),
+:deep(.p-select-overlay .p-select-option.p-selected) {
+  background: var(--primary-color, #3b82f6) !important;
+  color: var(--primary-color-text, #ffffff) !important;
+}
