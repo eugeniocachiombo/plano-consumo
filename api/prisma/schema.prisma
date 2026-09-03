@@ -13,7 +13,8 @@ model User {
   username         String            @unique @default("empty")
   password         String            @default("empty")
   consumptionPlans ConsumptionPlan[]
-  category         Category[]
+  consumptions     Consumption[]
+  categories       Category[]
 }
 
 model Category {
@@ -24,6 +25,7 @@ model Category {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   consumptionPlans ConsumptionPlan[]
+  consumptions     Consumption[]
 
   @@unique([userId, name])
   @@map("categories")
@@ -43,4 +45,20 @@ model ConsumptionPlan {
 
   @@unique([userId, categoryId, month, year])
   @@map("consumption_plans")
+}
+
+model Consumption {
+  id          Int     @id @default(autoincrement())
+  amount      Decimal @db.Decimal(10, 2)
+  description String?
+  month       Int
+  year        Int
+  userId      Int     @map("user_id")
+  categoryId  Int     @map("category_id")
+
+  // Relationships
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("consumptions")
 }
