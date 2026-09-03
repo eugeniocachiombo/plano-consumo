@@ -5,6 +5,9 @@ import { api } from '@/services/api';
 export interface Category {
   id: number;
   name: string;
+  userId: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CreateCategoryPayload {
@@ -16,6 +19,7 @@ export interface UpdateCategoryPayload {
 }
 
 export const useCategoryStore = defineStore('category', () => {
+  const userId = Number(localStorage.getItem('user'));
   const categories = ref<Category[]>([]);
   const currentCategory = ref<Category | null>(null);
   const isLoading = ref<boolean>(false);
@@ -29,7 +33,7 @@ export const useCategoryStore = defineStore('category', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.get<unknown, Category[]>('/categories');
+      const response = await api.get<unknown, Category[]>(`/categories/?userId=${userId}`);
       categories.value = response;
       return response;
     } catch (err: any) {
@@ -45,7 +49,7 @@ export const useCategoryStore = defineStore('category', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.get<unknown, Category>(`/categories/${id}`);
+      const response = await api.get<unknown, Category>(`/categories/${id}?userId=${userId}`);
       currentCategory.value = response;
       return response;
     } catch (err: any) {
@@ -61,7 +65,7 @@ export const useCategoryStore = defineStore('category', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.post<unknown, Category>('/categories', payload);
+      const response = await api.post<unknown, Category>(`/categories?userId=${userId}`, payload);
       await list();
       return response;
     } catch (err: any) {
@@ -77,7 +81,7 @@ export const useCategoryStore = defineStore('category', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.put<unknown, Category>(`/categories/${id}`, payload);
+      const response = await api.put<unknown, Category>(`/categories/${id}?userId=${userId}`, payload);
       await list();
       return response;
     } catch (err: any) {
@@ -93,7 +97,7 @@ export const useCategoryStore = defineStore('category', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      await api.delete(`/categories/${id}`);
+      await api.delete(`/categories/${id}?userId=${userId}`);
       await list();
     } catch (err: any) {
       const message = err.response?.data?.message || 'Erro ao eliminar categoria.';

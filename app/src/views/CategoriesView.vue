@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Column from 'primevue/column';
@@ -9,11 +9,14 @@ import InputText from 'primevue/inputtext';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
+import Badge from 'primevue/badge';
+import ProgressSpinner from 'primevue/progressspinner';
 import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 
 const categoryStore = useCategoryStore();
+
 const toast = useToast();
 const confirm = useConfirm();
 
@@ -21,14 +24,45 @@ const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
 
-const searchQuery = ref('');
 const rowsPerPage = ref(10);
+
+const searchQuery = ref('');
+const isFilterExpandedOnMobile = ref(false);
 
 const form = reactive({
   name: ''
 });
 
 const fieldErrors = ref({});
+
+const filteredCategories = computed(() => {
+  let list = categoryStore.categories || [];
+
+  if (searchQuery.value && searchQuery.value.trim() !== '') {
+    const q = searchQuery.value.trim().toLowerCase();
+    list = list.filter((category) => {
+      const categoryId = String(category.id || '');
+      const categoryName = String(category.name || '').toLowerCase();
+
+      return (
+        categoryId.includes(q) ||
+        categoryName.includes(q)
+      );
+    });
+  }
+
+  return list;
+});
+
+const activeFiltersCount = computed(() => {
+  let count = 0;
+  if (searchQuery.value && searchQuery.value.trim() !== '') count++;
+  return count;
+});
+
+function clearAllFilters() {
+  searchQuery.value = '';
+}
 
 function clearFieldError(field) {
   if (fieldErrors.value[field]) {
@@ -56,15 +90,25 @@ function openCreateDialog() {
 function openEditDialog(category) {
   isEditing.value = true;
   editingId.value = category.id;
-  form.name = category.name;
+  form.name = category.name || '';
   fieldErrors.value = {};
   isDialogVisible.value = true;
+}
+
+function validateForm() {
+  const errors = {};
+  if (!form.name || !form.name.trim()) {
+    errors.name = 'Informe o nome da categoria.';
+  }
+
+  fieldErrors.value = errors;
+  return Object.keys(errors).length === 0;
 }
 
 async function handleSave() {
   if (categoryStore.isLoading) return;
 
-  fieldErrors.value = {};
+  if (!validateForm()) return;
 
   try {
     const payload = {
@@ -76,8 +120,8 @@ async function handleSave() {
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
-        detail: 'Categoria atualizada com sucesso.',
-        life: 3000
+        detail: 'Categoria actualizada com sucesso.',
+        life: 3500
       });
     } else {
       await categoryStore.create(payload);
@@ -85,7 +129,7 @@ async function handleSave() {
         severity: 'success',
         summary: 'Sucesso',
         detail: 'Categoria criada com sucesso.',
-        life: 3000
+        life: 3500
       });
     }
 
@@ -99,16 +143,16 @@ async function handleSave() {
 
     toast.add({
       severity: 'error',
-      summary: 'Erro',
-      detail: responseData?.message || 'Por favor, verifique os campos destacados.',
-      life: 4000
+      summary: 'Erro na Operação',
+      detail: responseData?.message || 'Por favor, verifique os campos destacados e tente novamente.',
+      life: 5000
     });
   }
 }
 
 function confirmDelete(category) {
   confirm.require({
-    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta acção não pode ser desfeita.`,
+    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta acção é irreversível.`,
     header: 'Confirmar Eliminação',
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-secondary p-button-outlined',
@@ -121,47 +165,46 @@ function confirmDelete(category) {
         toast.add({
           severity: 'success',
           summary: 'Sucesso',
-          detail: 'Registo apagado com sucesso.',
-          life: 3000
+          detail: 'Categoria eliminada com sucesso.',
+          life: 3500
         });
       } catch (error) {
         const responseData = error?.response?.data;
         toast.add({
           severity: 'error',
-          summary: 'Erro',
+          summary: 'Erro ao Eliminar',
           detail: responseData?.message || 'Não foi possível eliminar a categoria.',
-          life: 4000
+          life: 5000
         });
       }
     }
   });
 }
 
-async function reloadCategories() {
+async function reloadData() {
   try {
     await categoryStore.list();
   } catch (error) {
     toast.add({
       severity: 'error',
-      summary: 'Erro',
-      detail: 'Não foi possível carregar as categorias.',
-      life: 4000
+      summary: 'Erro de Carregamento',
+      detail: 'Não foi possível carregar os dados das categorias.',
+      life: 5000
     });
   }
 }
 
 onMounted(async () => {
-  await reloadCategories();
+  await reloadData();
 });
 </script>
 
 <template>
   <Toast position="top-right" />
 
-  <ConfirmDialog class="custom-dark-dialog" append-to="self" />
+  <ConfirmDialog class="theme-adapted-dialog" append-to="self" />
 
   <section class="category-page">
-    <!-- Cabeçalho da Página -->
     <header class="page-heading">
       <div class="heading-content">
         <div class="title-with-badge">
@@ -174,7 +217,7 @@ onMounted(async () => {
             aria-label="Total de categorias"
           />
         </div>
-        <p>Organize e gira os tipos de consumo e despesas do sistema.</p>
+        <p>Gerencie as categorias de consumo do seu perfil.</p>
       </div>
       <div class="heading-actions">
         <Button
@@ -187,56 +230,107 @@ onMounted(async () => {
       </div>
     </header>
 
-    <!-- Card da Tabela e Conteúdo -->
+    <div class="kpi-summary-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon bg-primary-soft">
+          <i class="pi pi-tags"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Total de Categorias</span>
+          <span class="kpi-value">{{ categoryStore.categories?.length || 0 }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon bg-info-soft">
+          <i class="pi pi-list"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Categorias Exibidas</span>
+          <span class="kpi-value">{{ filteredCategories.length }} / {{ categoryStore.categories?.length || 0 }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon bg-warning-soft">
+          <i class="pi pi-filter"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Filtros Activos</span>
+          <span class="kpi-value">
+            {{ activeFiltersCount > 0 ? `${activeFiltersCount} aplicado(s)` : 'Nenhum' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <Card class="table-card border-none shadow-1">
       <template #content>
         <DataTable
-          :value="categoryStore.categories"
+          :value="filteredCategories"
           :loading="categoryStore.isLoading"
-          :globalFilterFields="['name', 'id']"
-          :filters="{ global: { value: searchQuery, matchMode: 'contains' } }"
           responsiveLayout="scroll"
           paginator
           v-model:rows="rowsPerPage"
           :rowsPerPageOptions="[5, 10, 20, 50]"
           paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="A mostrar {first} até {last} de {totalRecords} categorias"
-          emptyMessage="Nenhuma categoria encontrada."
           class="custom-datatable p-datatable-sm"
           dataKey="id"
         >
           <template #header>
-            <div class="table-header">
-              <div class="search-container">
-                <i class="pi pi-search search-icon" aria-hidden="true" />
-                <InputText
-                  v-model="searchQuery"
-                  placeholder="Pesquisar por ID ou nome..."
-                  class="search-input"
-                  aria-label="Pesquisar categorias"
-                />
-                <Button
-                  v-if="searchQuery"
-                  icon="pi pi-times"
-                  class="p-button-text p-button-rounded clear-search-btn"
-                  aria-label="Limpar pesquisa"
-                  @click="searchQuery = ''"
-                />
+            <div class="table-header-wrapper table-header">
+              <div class="filter-top-row">
+                <div class="search-container">
+                  <i class="pi pi-search search-icon" aria-hidden="true" />
+                  <InputText
+                    v-model="searchQuery"
+                    placeholder="Pesquisar por ID ou nome..."
+                    class="search-input theme-input"
+                    aria-label="Pesquisar categorias"
+                  />
+                  <Button
+                    v-if="searchQuery"
+                    icon="pi pi-times"
+                    class="p-button-text p-button-rounded clear-search-btn"
+                    aria-label="Limpar pesquisa"
+                    @click="searchQuery = ''"
+                  />
+                </div>
+
+                <div class="toolbar-actions">
+                  <Button
+                    class="p-button-outlined p-button-secondary filter-toggle-btn sm:hidden"
+                    :class="{ 'filter-active': activeFiltersCount > 0 }"
+                    @click="isFilterExpandedOnMobile = !isFilterExpandedOnMobile"
+                  >
+                    <i class="pi pi-filter"></i>
+                    <span>Filtros</span>
+                    <Badge v-if="activeFiltersCount > 0" :value="activeFiltersCount" severity="info" />
+                  </Button>
+
+                  <Button
+                    icon="pi pi-refresh"
+                    class="p-button-text p-button-secondary p-button-rounded refresh-btn"
+                    v-tooltip.top="'Actualizar lista'"
+                    aria-label="Actualizar lista de categorias"
+                    :loading="categoryStore.isLoading"
+                    @click="reloadData"
+                  />
+                </div>
               </div>
-              <Button
-                icon="pi pi-refresh"
-                class="p-button-text p-button-secondary p-button-rounded refresh-btn"
-                v-tooltip.top="'Atualizar lista'"
-                aria-label="Atualizar lista de categorias"
-                :loading="categoryStore.isLoading"
-                @click="reloadCategories"
-              />
+
+              <div v-if="activeFiltersCount > 0" class="active-chips-bar">
+                <span class="chips-title">Filtros aplicados:</span>
+                <Tag v-if="searchQuery" severity="info" class="filter-chip">
+                  <span>Pesquisa: "{{ searchQuery }}"</span>
+                  <i class="pi pi-times chip-remove" @click="searchQuery = ''"></i>
+                </Tag>
+              </div>
             </div>
           </template>
 
           <template #loading>
             <div class="table-loading-state">
-              <i class="pi pi-spin pi-spinner text-2xl text-primary mb-2"></i>
+              <ProgressSpinner style="width: 40px; height: 40px" strokeWidth="4" />
               <span>A carregar categorias...</span>
             </div>
           </template>
@@ -244,29 +338,34 @@ onMounted(async () => {
           <template #empty>
             <div class="empty-state">
               <div class="empty-icon-wrapper">
-                <i class="pi pi-folder-open"></i>
+                <i :class="activeFiltersCount > 0 ? 'pi pi-filter-slash' : 'pi pi-folder-open'"></i>
               </div>
-              <p class="empty-title">Nenhuma categoria encontrada</p>
-              <p class="empty-subtitle" v-if="searchQuery">
-                Nenhum resultado corresponde à pesquisa "<strong>{{ searchQuery }}</strong>".
-              </p>
-              <p class="empty-subtitle" v-else>
-                Comece por adicionar a primeira categoria ao sistema.
-              </p>
-              <Button
-                v-if="!searchQuery"
-                label="Criar Categoria"
-                icon="pi pi-plus"
-                class="p-button-outlined p-button-sm mt-3"
-                @click="openCreateDialog"
-              />
-              <Button
-                v-else
-                label="Limpar Pesquisa"
-                icon="pi pi-filter-slash"
-                class="p-button-text p-button-sm mt-3"
-                @click="searchQuery = ''"
-              />
+
+              <template v-if="activeFiltersCount > 0">
+                <p class="empty-title">Nenhum resultado encontrado</p>
+                <p class="empty-subtitle">
+                  Não encontramos nenhuma categoria correspondente aos filtros seleccionados.
+                </p>
+                <Button
+                  label="Limpar Filtros"
+                  icon="pi pi-filter-slash"
+                  class="p-button-outlined p-button-sm mt-3"
+                  @click="clearAllFilters"
+                />
+              </template>
+
+              <template v-else>
+                <p class="empty-title">Ainda não existem categorias</p>
+                <p class="empty-subtitle">
+                  Comece por organizar as suas despesas adicionando a sua primeira categoria.
+                </p>
+                <Button
+                  label="Criar Nova Categoria"
+                  icon="pi pi-plus"
+                  class="p-button-primary p-button-sm mt-3"
+                  @click="openCreateDialog"
+                />
+              </template>
             </div>
           </template>
 
@@ -276,9 +375,9 @@ onMounted(async () => {
             </template>
           </Column>
 
-          <Column field="name" header="Categoria" sortable>
+          <Column field="name" header="Nome da Categoria" sortable>
             <template #body="{ data }">
-              <span class="category-name-cell">{{ data.name }}</span>
+              <span class="category-name-cell font-medium">{{ data.name }}</span>
             </template>
           </Column>
 
@@ -306,7 +405,6 @@ onMounted(async () => {
       </template>
     </Card>
 
-    <!-- Dialog de Criação / Edição -->
     <Dialog
       v-model:visible="isDialogVisible"
       :header="isEditing ? 'Editar Categoria' : 'Nova Categoria'"
@@ -314,29 +412,30 @@ onMounted(async () => {
       :dismissableMask="!categoryStore.isLoading"
       :closable="!categoryStore.isLoading"
       append-to="self"
-      class="category-dialog custom-dark-dialog"
-      style="width: 100%; max-width: 460px"
+      class="category-dialog theme-adapted-dialog"
+      style="width: 100%; max-width: 500px"
     >
       <form @submit.prevent="handleSave" class="form-grid" novalidate>
         <div class="field">
           <label for="category-name" class="required-label font-medium text-sm">Nome da Categoria</label>
-          <div class="input-wrapper">
-            <InputText
-              id="category-name"
-              v-model="form.name"
-              placeholder="Ex: Alimentação, Transporte, Saúde"
-              class="w-full search-input-field"
-              :class="{ 'p-invalid': !!fieldErrors.name }"
-              :invalid="!!fieldErrors.name"
-              :aria-invalid="!!fieldErrors.name"
-              aria-describedby="category-name-error"
-              :disabled="categoryStore.isLoading"
-              @input="clearFieldError('name')"
-              required
-              autofocus
-            />
-          </div>
-          <small id="category-name-error" v-if="fieldErrors.name" class="p-error-message" role="alert">
+          <InputText
+            id="category-name"
+            v-model="form.name"
+            placeholder="Ex: Alimentação, Transportes..."
+            class="w-full search-input-field theme-input"
+            :class="{ 'p-invalid': !!fieldErrors.name }"
+            :invalid="!!fieldErrors.name"
+            :disabled="categoryStore.isLoading"
+            aria-describedby="category-name-error"
+            @input="clearFieldError('name')"
+            @update:modelValue="clearFieldError('name')"
+          />
+          <small
+            id="category-name-error"
+            v-if="fieldErrors.name"
+            class="p-error-message"
+            role="alert"
+          >
             <i class="pi pi-exclamation-circle"></i>
             <span>{{ getErrorMessage(fieldErrors.name) }}</span>
           </small>
@@ -352,11 +451,10 @@ onMounted(async () => {
           />
           <Button
             type="submit"
-            :label="isEditing ? 'Atualizar' : 'Guardar'"
+            :label="isEditing ? 'Actualizar' : 'Guardar'"
             :icon="categoryStore.isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
             class="p-button-primary"
             :loading="categoryStore.isLoading"
-            :disabled="categoryStore.isLoading || !form.name.trim()"
           />
         </div>
       </form>
@@ -365,6 +463,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-  @import "@/assets/table.css";
-  @import "@/assets/dialog.css";
+  @import '../assets/crud.css';
+  @import '../assets/mobile.css';
 </style>
