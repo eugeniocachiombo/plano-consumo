@@ -70,20 +70,32 @@ const router = createRouter({
 // Middleware Global (Navigation Guard)
 router.beforeEach((to, _from, next) => {
   const userStore = useUserStore();
-  
-  // Verifica se existe token na store ou no localStorage
-  const isAuthenticated = userStore.isAuthenticated || !!localStorage.getItem("token");
+
+  const token = localStorage.getItem("token");
+  const userID = localStorage.getItem("userID");
+
+  // Só está autenticado se possuir TOKEN e USER_ID
+  const isAuthenticated =
+    (userStore.isAuthenticated || !!token) && !!userID;
 
   // Rota requer autenticação e o utilizador não está autenticado
-  if (to.matched.some((record) => record.meta.requiresAuth) && !isAuthenticated) {
+  if (
+    to.matched.some((record) => record.meta.requiresAuth) &&
+    !isAuthenticated
+  ) {
     return next({
       name: "login",
-      query: { redirect: to.fullPath } // Guarda a rota pretendida para redirecionar após o login
+      query: {
+        redirect: to.fullPath,
+      },
     });
   }
 
-  // Rota exclusiva para visitantes (login/cadastro) e o utilizador já está autenticado
-  if (to.matched.some((record) => record.meta.requiresGuest) && isAuthenticated) {
+  // Rota exclusiva para visitantes e o utilizador já está autenticado
+  if (
+    to.matched.some((record) => record.meta.requiresGuest) &&
+    isAuthenticated
+  ) {
     return next({ name: "dashboard" });
   }
 
