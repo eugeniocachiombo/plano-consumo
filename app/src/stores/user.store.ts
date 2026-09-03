@@ -61,7 +61,7 @@ export const useUserStore = defineStore('user', () => {
     error.value = null;
 
     try {
-      const response = await api.post<unknown, AuthResponse>('/auth/login', { username, password });
+      const response = await api.post<unknown, AuthResponse>('/users/login', { username, password });
       
       if (response && response.token) {
         setSession(response.token, response.user);
