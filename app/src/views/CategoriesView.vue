@@ -21,7 +21,6 @@ const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
 
-// Estados para pesquisa e paginação
 const searchQuery = ref('');
 const rowsPerPage = ref(10);
 
@@ -29,13 +28,11 @@ const form = reactive({
   name: ''
 });
 
-const fieldErrors = ref({
-  name: ''
-});
+const fieldErrors = ref({});
 
 function clearFieldError(field) {
   if (fieldErrors.value[field]) {
-    fieldErrors.value[field] = '';
+    delete fieldErrors.value[field];
   }
 }
 
@@ -44,11 +41,15 @@ function getErrorMessage(errorField) {
   return Array.isArray(errorField) ? errorField[0] : errorField;
 }
 
+function resetForm() {
+  form.name = '';
+  fieldErrors.value = {};
+}
+
 function openCreateDialog() {
   isEditing.value = false;
   editingId.value = null;
-  form.name = '';
-  fieldErrors.value = {};
+  resetForm();
   isDialogVisible.value = true;
 }
 
@@ -107,7 +108,7 @@ async function handleSave() {
 
 function confirmDelete(category) {
   confirm.require({
-    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta ação não pode ser desfeita.`,
+    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta acção não pode ser desfeita.`,
     header: 'Confirmar Eliminação',
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-secondary p-button-outlined',
@@ -156,7 +157,8 @@ onMounted(async () => {
 
 <template>
   <Toast position="top-right" />
-  <ConfirmDialog />
+
+  <ConfirmDialog class="custom-dark-dialog" append-to="self" />
 
   <section class="category-page">
     <!-- Cabeçalho da Página -->
@@ -164,10 +166,10 @@ onMounted(async () => {
       <div class="heading-content">
         <div class="title-with-badge">
           <h1>Categorias</h1>
-          <Tag 
-            v-if="categoryStore.categories" 
-            :value="categoryStore.categories.length" 
-            severity="info" 
+          <Tag
+            v-if="categoryStore.categories"
+            :value="categoryStore.categories.length"
+            severity="info"
             class="count-badge"
             aria-label="Total de categorias"
           />
@@ -175,12 +177,12 @@ onMounted(async () => {
         <p>Organize e gira os tipos de consumo e despesas do sistema.</p>
       </div>
       <div class="heading-actions">
-        <Button 
-          label="Nova categoria" 
-          icon="pi pi-plus" 
+        <Button
+          label="Nova categoria"
+          icon="pi pi-plus"
           class="p-button-primary btn-add"
           :disabled="categoryStore.isLoading"
-          @click="openCreateDialog" 
+          @click="openCreateDialog"
         />
       </div>
     </header>
@@ -188,8 +190,8 @@ onMounted(async () => {
     <!-- Card da Tabela e Conteúdo -->
     <Card class="table-card border-none shadow-1">
       <template #content>
-        <DataTable 
-          :value="categoryStore.categories" 
+        <DataTable
+          :value="categoryStore.categories"
           :loading="categoryStore.isLoading"
           :globalFilterFields="['name', 'id']"
           :filters="{ global: { value: searchQuery, matchMode: 'contains' } }"
@@ -207,23 +209,23 @@ onMounted(async () => {
             <div class="table-header">
               <div class="search-container">
                 <i class="pi pi-search search-icon" aria-hidden="true" />
-                <InputText 
-                  v-model="searchQuery" 
-                  placeholder="Pesquisar por ID ou nome..." 
+                <InputText
+                  v-model="searchQuery"
+                  placeholder="Pesquisar por ID ou nome..."
                   class="search-input"
                   aria-label="Pesquisar categorias"
                 />
-                <Button 
-                  v-if="searchQuery" 
-                  icon="pi pi-times" 
-                  class="p-button-text p-button-rounded clear-search-btn" 
+                <Button
+                  v-if="searchQuery"
+                  icon="pi pi-times"
+                  class="p-button-text p-button-rounded clear-search-btn"
                   aria-label="Limpar pesquisa"
                   @click="searchQuery = ''"
                 />
               </div>
-              <Button 
-                icon="pi pi-refresh" 
-                class="p-button-text p-button-secondary p-button-rounded refresh-btn" 
+              <Button
+                icon="pi pi-refresh"
+                class="p-button-text p-button-secondary p-button-rounded refresh-btn"
                 v-tooltip.top="'Atualizar lista'"
                 aria-label="Atualizar lista de categorias"
                 :loading="categoryStore.isLoading"
@@ -251,19 +253,19 @@ onMounted(async () => {
               <p class="empty-subtitle" v-else>
                 Comece por adicionar a primeira categoria ao sistema.
               </p>
-              <Button 
+              <Button
                 v-if="!searchQuery"
-                label="Criar Categoria" 
-                icon="pi pi-plus" 
+                label="Criar Categoria"
+                icon="pi pi-plus"
                 class="p-button-outlined p-button-sm mt-3"
-                @click="openCreateDialog" 
+                @click="openCreateDialog"
               />
-              <Button 
+              <Button
                 v-else
-                label="Limpar Pesquisa" 
-                icon="pi pi-filter-slash" 
+                label="Limpar Pesquisa"
+                icon="pi pi-filter-slash"
                 class="p-button-text p-button-sm mt-3"
-                @click="searchQuery = ''" 
+                @click="searchQuery = ''"
               />
             </div>
           </template>
@@ -280,18 +282,18 @@ onMounted(async () => {
             </template>
           </Column>
 
-          <Column header="Ações" style="width: 140px; text-align: center">
+          <Column header="Acções" style="width: 140px; text-align: center">
             <template #body="{ data }">
               <div class="action-buttons">
-                <Button 
-                  icon="pi pi-pencil" 
+                <Button
+                  icon="pi pi-pencil"
                   class="p-button-text p-button-rounded p-button-warning action-btn"
                   v-tooltip.top="'Editar'"
                   aria-label="Editar Categoria"
                   @click="openEditDialog(data)"
                 />
-                <Button 
-                  icon="pi pi-trash" 
+                <Button
+                  icon="pi pi-trash"
                   class="p-button-text p-button-rounded p-button-danger action-btn"
                   v-tooltip.top="'Eliminar'"
                   aria-label="Eliminar Categoria"
@@ -305,23 +307,24 @@ onMounted(async () => {
     </Card>
 
     <!-- Dialog de Criação / Edição -->
-    <Dialog 
-      v-model:visible="isDialogVisible" 
-      :header="isEditing ? 'Editar Categoria' : 'Nova Categoria'" 
+    <Dialog
+      v-model:visible="isDialogVisible"
+      :header="isEditing ? 'Editar Categoria' : 'Nova Categoria'"
       :modal="true"
       :dismissableMask="!categoryStore.isLoading"
       :closable="!categoryStore.isLoading"
-      class="category-dialog"
+      append-to="self"
+      class="category-dialog custom-dark-dialog"
       style="width: 100%; max-width: 460px"
     >
       <form @submit.prevent="handleSave" class="form-grid" novalidate>
         <div class="field">
           <label for="category-name" class="required-label font-medium text-sm">Nome da Categoria</label>
           <div class="input-wrapper">
-            <InputText 
-              id="category-name" 
-              v-model="form.name" 
-              placeholder="Ex: Alimentação, Transporte, Saúde" 
+            <InputText
+              id="category-name"
+              v-model="form.name"
+              placeholder="Ex: Alimentação, Transporte, Saúde"
               class="w-full search-input-field"
               :class="{ 'p-invalid': !!fieldErrors.name }"
               :invalid="!!fieldErrors.name"
@@ -340,18 +343,18 @@ onMounted(async () => {
         </div>
 
         <div class="dialog-footer">
-          <Button 
-            type="button" 
-            label="Cancelar" 
-            class="p-button-text p-button-secondary" 
+          <Button
+            type="button"
+            label="Cancelar"
+            class="p-button-text p-button-secondary"
             :disabled="categoryStore.isLoading"
-            @click="isDialogVisible = false" 
+            @click="isDialogVisible = false"
           />
-          <Button 
-            type="submit" 
-            :label="isEditing ? 'Atualizar' : 'Guardar'" 
-            :icon="categoryStore.isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'" 
-            class="p-button-primary" 
+          <Button
+            type="submit"
+            :label="isEditing ? 'Atualizar' : 'Guardar'"
+            :icon="categoryStore.isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+            class="p-button-primary"
             :loading="categoryStore.isLoading"
             :disabled="categoryStore.isLoading || !form.name.trim()"
           />
@@ -362,7 +365,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Transições Globais e Animação de Entrada */
 .category-page {
   display: flex;
   flex-direction: column;
@@ -381,7 +383,6 @@ onMounted(async () => {
   }
 }
 
-/* Cabeçalho da Página */
 .page-heading {
   display: flex;
   justify-content: space-between;
@@ -408,7 +409,7 @@ onMounted(async () => {
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.02em;
-  color: var(--text-color, #1f2937);
+  color: var(--text-color);
 }
 
 .count-badge {
@@ -421,7 +422,7 @@ onMounted(async () => {
 .page-heading p {
   margin: 0;
   font-size: 0.9375rem;
-  color: var(--text-color-secondary, #6b7280);
+  color: var(--text-color-secondary);
 }
 
 .btn-add {
@@ -431,39 +432,38 @@ onMounted(async () => {
 
 .btn-add:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn-add:not(:disabled):active {
   transform: translateY(0);
 }
 
-/* Estilo do Card Container */
 .table-card {
   border-radius: 12px;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--surface-border, rgba(229, 231, 235, 0.8));
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
   overflow: hidden;
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
 :deep(.p-card-body) {
   padding: 0;
+  background: var(--surface-card);
 }
 
 :deep(.p-card-content) {
   padding: 0;
 }
 
-/* Tabela e Cabeçalhos */
 .table-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  background: var(--surface-section, #fafafa);
+  border-bottom: 1px solid var(--surface-border);
+  background: var(--surface-section);
 }
 
 .search-container {
@@ -477,7 +477,7 @@ onMounted(async () => {
 .search-icon {
   position: absolute;
   left: 0.875rem;
-  color: var(--text-color-secondary, #9ca3af);
+  color: var(--text-color-secondary);
   pointer-events: none;
   font-size: 0.9rem;
   z-index: 1;
@@ -490,7 +490,9 @@ onMounted(async () => {
   border-radius: 8px;
   font-size: 0.875rem;
   transition: all 150ms ease;
-  background: var(--surface-overlay, #ffffff);
+  background: var(--surface-ground);
+  color: var(--text-color);
+  border: 1px solid var(--surface-border);
 }
 
 .search-input:focus {
@@ -503,7 +505,7 @@ onMounted(async () => {
   width: 1.75rem !important;
   height: 1.75rem !important;
   padding: 0 !important;
-  color: var(--text-color-secondary, #9ca3af);
+  color: var(--text-color-secondary);
 }
 
 .refresh-btn {
@@ -516,45 +518,116 @@ onMounted(async () => {
   transform: rotate(45deg);
 }
 
-/* Ajustes nas Linhas e Células */
+.custom-datatable :deep(.p-datatable-header) {
+  background: var(--surface-section);
+  border-color: var(--surface-border);
+  padding: 0;
+}
+
 .custom-datatable :deep(.p-datatable-thead > tr > th) {
-  background: var(--surface-section, #fafafa);
-  color: var(--text-color-secondary, #4b5563);
+  background: var(--surface-section);
+  color: var(--text-color-secondary);
   font-weight: 600;
   font-size: 0.8125rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #e5e7eb);
+  border-bottom: 1px solid var(--surface-border);
 }
 
 .custom-datatable :deep(.p-datatable-tbody > tr) {
+  background: var(--surface-card);
+  color: var(--text-color);
   transition: background-color 150ms ease;
 }
 
 .custom-datatable :deep(.p-datatable-tbody > tr > td) {
   padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
+  border-bottom: 1px solid var(--surface-border);
   vertical-align: middle;
 }
 
 .custom-datatable :deep(.p-datatable-tbody > tr:hover) {
-  background-color: var(--surface-hover, rgba(0, 0, 0, 0.015));
+  background-color: var(--surface-hover);
+}
+
+.custom-datatable :deep(.p-paginator) {
+  background: var(--surface-card);
+  border-top: 1px solid var(--surface-border);
+  color: var(--text-color-secondary);
+  padding: 0.75rem 1rem;
+}
+
+.custom-datatable :deep(.p-paginator-current) {
+  color: var(--text-color-secondary);
+}
+
+.custom-datatable :deep(.p-paginator-first),
+.custom-datatable :deep(.p-paginator-prev),
+.custom-datatable :deep(.p-paginator-next),
+.custom-datatable :deep(.p-paginator-last),
+.custom-datatable :deep(.p-paginator-page) {
+  background: transparent;
+  color: var(--text-color-secondary);
+  border: none;
+  border-radius: 6px;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  margin: 0 0.125rem;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.custom-datatable :deep(.p-paginator-page:hover),
+.custom-datatable :deep(.p-paginator-first:hover),
+.custom-datatable :deep(.p-paginator-prev:hover),
+.custom-datatable :deep(.p-paginator-next:hover),
+.custom-datatable :deep(.p-paginator-last:hover) {
+  background: var(--surface-hover);
+  color: var(--text-color);
+}
+
+.custom-datatable :deep(.p-paginator-page.p-highlight) {
+  background: var(--primary-color);
+  color: var(--primary-color-text, #ffffff);
+}
+
+.custom-datatable :deep(.p-paginator-rpp-options.p-dropdown),
+.custom-datatable :deep(.p-select) {
+  background: var(--surface-ground) !important;
+  border: 1px solid var(--surface-border) !important;
+  border-radius: 6px;
+  height: 2.25rem;
+}
+
+.custom-datatable :deep(.p-paginator-rpp-options.p-dropdown .p-dropdown-label),
+.custom-datatable :deep(.p-select-label) {
+  color: var(--text-color) !important;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+}
+
+.custom-datatable :deep(.p-paginator-rpp-options.p-dropdown .p-dropdown-trigger),
+.custom-datatable :deep(.p-select-dropdown) {
+  color: var(--text-color-secondary) !important;
+  width: 2rem;
 }
 
 .id-badge {
   font-family: var(--font-family-monospace, monospace);
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--text-color-secondary, #6b7280);
-  background: var(--surface-ground, #f3f4f6);
+  color: var(--text-color-secondary);
+  background: var(--surface-ground);
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
+  border: 1px solid var(--surface-border);
 }
 
 .category-name-cell {
   font-weight: 500;
-  color: var(--text-color, #111827);
+  color: var(--text-color);
   font-size: 0.9375rem;
 }
 
@@ -574,15 +647,15 @@ onMounted(async () => {
   transform: scale(1.1);
 }
 
-/* Empty State e Loading State */
 .table-loading-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
-  color: var(--text-color-secondary, #6b7280);
+  color: var(--text-color-secondary);
   font-size: 0.875rem;
+  background: var(--surface-card);
 }
 
 .empty-state {
@@ -592,13 +665,14 @@ onMounted(async () => {
   justify-content: center;
   padding: 3.5rem 1.5rem;
   text-align: center;
+  background: var(--surface-card);
 }
 
 .empty-icon-wrapper {
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 50%;
-  background: var(--surface-ground, #f3f4f6);
+  background: var(--surface-ground);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -607,44 +681,38 @@ onMounted(async () => {
 
 .empty-icon-wrapper i {
   font-size: 1.5rem;
-  color: var(--text-color-secondary, #9ca3af);
+  color: var(--text-color-secondary);
 }
 
 .empty-title {
   font-size: 1rem;
   font-weight: 600;
   margin: 0 0 0.25rem 0;
-  color: var(--text-color, #374151);
+  color: var(--text-color);
 }
 
 .empty-subtitle {
   font-size: 0.875rem;
   margin: 0;
-  color: var(--text-color-secondary, #6b7280);
+  color: var(--text-color-secondary);
   max-width: 360px;
-}
-
-/* Dialog */
-.category-dialog :deep(.p-dialog-header) {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  font-weight: 600;
-}
-
-.category-dialog :deep(.p-dialog-content) {
-  padding: 1.5rem;
 }
 
 .form-grid {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  padding-top: 0.5rem;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.required-label {
+  color: var(--text-color);
 }
 
 .required-label::after {
@@ -654,6 +722,16 @@ onMounted(async () => {
 
 .input-wrapper {
   position: relative;
+}
+
+.search-input-field {
+  background: var(--surface-ground) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--surface-border) !important;
+}
+
+.search-input-field:focus {
+  border-color: var(--primary-color) !important;
 }
 
 .p-error-message {
@@ -671,14 +749,13 @@ onMounted(async () => {
   justify-content: flex-end;
   gap: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid var(--surface-border, #f3f4f6);
+  border-top: 1px solid var(--surface-border);
 }
 
 .w-full {
   width: 100%;
 }
 
-/* Responsividade */
 @media (max-width: 640px) {
   .page-heading {
     flex-direction: column;
@@ -706,5 +783,105 @@ onMounted(async () => {
   .custom-datatable :deep(.p-datatable-tbody > tr > td) {
     padding: 0.75rem 0.875rem;
   }
+}
+</style>
+
+<style>
+/* Fundo/borda/cor do dialog: cobre .p-dialog (v3/v4) e a classe custom */
+.p-dialog,
+.p-confirm-dialog,
+.p-confirmdialog,
+.custom-dark-dialog.p-dialog {
+  background: var(--surface-card, #1e293b) !important;
+  border: 1px solid var(--surface-border, #334155) !important;
+  color: var(--text-color, #f8fafc) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-dialog .p-dialog-header,
+.custom-dark-dialog .p-dialog-header {
+  background: var(--surface-card, #1e293b) !important;
+  color: var(--text-color, #f8fafc) !important;
+  border-bottom: 1px solid var(--surface-border, #334155) !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+.p-dialog .p-dialog-title,
+.custom-dark-dialog .p-dialog-header .p-dialog-title {
+  color: var(--text-color, #f8fafc) !important;
+  font-weight: 600 !important;
+}
+
+/* Botões do header: cobre nomenclatura antiga (p-dialog-header-icon)
+   e a nova do PrimeVue 4 (p-dialog-close-button / p-dialog-maximize-button) */
+.p-dialog .p-dialog-header-icon,
+.p-dialog .p-dialog-close-button,
+.p-dialog .p-dialog-maximize-button,
+.custom-dark-dialog .p-dialog-header-actions button {
+  color: var(--text-color-secondary, #94a3b8) !important;
+}
+
+.p-dialog .p-dialog-header-icon:hover,
+.p-dialog .p-dialog-close-button:hover,
+.p-dialog .p-dialog-maximize-button:hover,
+.custom-dark-dialog .p-dialog-header-actions button:hover {
+  background: var(--surface-hover, #334155) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+.p-dialog .p-dialog-content,
+.custom-dark-dialog .p-dialog-content {
+  background: var(--surface-card, #1e293b) !important;
+  color: var(--text-color, #f8fafc) !important;
+  padding: 1.25rem 1.5rem !important;
+}
+
+.p-dialog .p-dialog-footer,
+.custom-dark-dialog .p-dialog-footer {
+  background: var(--surface-card, #1e293b) !important;
+  border-top: 1px solid var(--surface-border, #334155) !important;
+  padding: 1rem 1.5rem !important;
+}
+
+.p-confirm-dialog-message,
+.p-confirmdialog-message {
+  color: var(--text-color, #f8fafc) !important;
+}
+
+.p-dropdown-panel,
+.p-select-overlay,
+.p-popover {
+  background: var(--surface-card, #1e293b) !important;
+  border: 1px solid var(--surface-border, #334155) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+}
+
+.p-dropdown-panel .p-dropdown-items,
+.p-select-overlay .p-select-list {
+  padding: 0.35rem !important;
+  background: var(--surface-card, #1e293b) !important;
+}
+
+.p-dropdown-panel .p-dropdown-item,
+.p-select-overlay .p-select-option {
+  color: var(--text-color, #f8fafc) !important;
+  background: transparent !important;
+  border-radius: 6px !important;
+  padding: 0.5rem 0.75rem !important;
+  margin-bottom: 2px !important;
+}
+
+.p-dropdown-panel .p-dropdown-item:hover,
+.p-select-overlay .p-select-option:hover {
+  background: var(--surface-hover, #334155) !important;
+  color: var(--text-color, #f8fafc) !important;
+}
+
+.p-dropdown-panel .p-dropdown-item.p-highlight,
+.p-select-overlay .p-select-option.p-selected {
+  background: var(--primary-color, #3b82f6) !important;
+  color: var(--primary-color-text, #ffffff) !important;
 }
 </style>
