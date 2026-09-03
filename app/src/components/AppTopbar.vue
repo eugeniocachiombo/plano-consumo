@@ -30,21 +30,33 @@
 
       <Button icon="pi pi-bell" text rounded severity="secondary" aria-label="Notificações" />
 
-      <div class="topbar-user">
+      <!-- Botão/Área do Utilizador com Dropdown Trigger -->
+      <div 
+        class="topbar-user" 
+        aria-haspopup="true" 
+        aria-controls="user_menu"
+        @click="toggleUserMenu"
+      >
         <div class="avatar">EC</div>
         <div class="user-meta">
           <strong>Eugénio</strong>
           <small>Administrador</small>
         </div>
+        <i class="pi pi-angle-down user-chevron"></i>
       </div>
+
+      <!-- Menu Popup do PrimeVue -->
+      <Menu ref="userMenu" id="user_menu" :model="userMenuItems" :popup="true" />
     </div>
   </header>
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import Button from 'primevue/button';
+import Menu from 'primevue/menu';
+import { useUserStore } from '@/stores/user.store'; // Importe a sua store do utilizador (ajuste o caminho se necessário)
 
 defineProps({
   darkMode: Boolean
@@ -53,6 +65,42 @@ defineProps({
 defineEmits(['toggle-menu', 'toggle-dark']);
 
 const route = useRoute();
+const router = useRouter();
+const userStore = useUserStore();
+
+
+const userMenu = ref(null);
+
+const toggleUserMenu = (event) => {
+  userMenu.value.toggle(event);
+};
+
+
+const handleLogout = async () => {
+  if (typeof userStore.logout === 'function') {
+    await userStore.logout();
+  }
+  router.push('/');
+};
+
+
+const userMenuItems = ref([
+  {
+    label: 'Perfil',
+    icon: 'pi pi-user',
+    command: () => {
+      router.push({ name: 'perfil' });
+    }
+  },
+  {
+    separator: true
+  },
+  {
+    label: 'Sair',
+    icon: 'pi pi-sign-out',
+    command: handleLogout
+  }
+]);
 
 const pageTitle = computed(() => {
   const titles = {
@@ -61,9 +109,31 @@ const pageTitle = computed(() => {
     planos: 'Planos de consumo',
     categorias: 'Categorias',
     cartoes: 'Cartões',
-    utilizadores: 'Utilizadores'
+    utilizadores: 'Utilizadores',
+    perfil: 'Perfil'
   };
 
   return titles[route.name] || 'Dashboard';
 });
 </script>
+
+<style scoped>
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius, 6px);
+  transition: background-color 0.2s;
+}
+
+.topbar-user:hover {
+  background-color: var(--surface-hover, rgba(0, 0, 0, 0.04));
+}
+
+.user-chevron {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary, #6c757d);
+}
+</style>
