@@ -1,14 +1,8 @@
 <template>
   <header class="app-topbar">
     <div class="topbar-left">
-      <Button
-        icon="pi pi-bars"
-        text
-        rounded
-        severity="secondary"
-        aria-label="Abrir menu"
-        @click="$emit('toggle-menu')"
-      />
+      <Button icon="pi pi-bars" text rounded severity="secondary" aria-label="Abrir menu"
+        @click="$emit('toggle-menu')" />
 
       <div class="breadcrumb">
         <i class="pi pi-home"></i>
@@ -19,28 +13,26 @@
     </div>
 
     <div class="topbar-actions">
-      <Button
-        :icon="darkMode ? 'pi pi-sun' : 'pi pi-moon'"
-        text
-        rounded
-        severity="secondary"
-        aria-label="Alternar tema"
-        @click="$emit('toggle-dark')"
-      />
+      <Button :icon="darkMode ? 'pi pi-sun' : 'pi pi-moon'" text rounded severity="secondary" aria-label="Alternar tema"
+        @click="$emit('toggle-dark')" />
 
       <Button icon="pi pi-bell" text rounded severity="secondary" aria-label="Notificações" />
 
       <!-- Botão/Área do Utilizador com Dropdown Trigger -->
-      <div 
-        class="topbar-user" 
-        aria-haspopup="true" 
-        aria-controls="user_menu"
-        @click="toggleUserMenu"
-      >
+      <div class="topbar-user" aria-haspopup="true" aria-controls="user_menu" @click="toggleUserMenu">
         <div class="avatar">EC</div>
         <div class="user-meta">
-          <strong>Eugénio</strong>
-          <small>Administrador</small>
+          <strong>
+            {{ userStore?.currentUser?.name
+              ? (userStore.currentUser.name.charAt(0).toUpperCase() + userStore.currentUser.name.slice(1).toLowerCase())
+              : 'Não Encontrado' }}
+          </strong>
+          <small>
+            {{ userStore?.currentUser?.profile
+              ? (userStore.currentUser.profile.charAt(0).toUpperCase() +
+                userStore.currentUser.profile.slice(1).toLowerCase())
+            : '' }}
+          </small>
         </div>
         <i class="pi pi-angle-down user-chevron"></i>
       </div>
@@ -52,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
@@ -79,8 +71,8 @@ const toggleUserMenu = (event) => {
 
 // Executa o encerramento da sessão
 const handleLogout = async () => {
-    await userStore.logout();
-    router.push('/');
+  await userStore.logout();
+  router.push('/');
 };
 
 // Confirmação antes de sair
@@ -129,6 +121,10 @@ const pageTitle = computed(() => {
 
   return titles[route.name] || 'Dashboard';
 });
+
+onMounted(async () => {
+  await userStore.initUser();
+})
 </script>
 
 <style scoped>
