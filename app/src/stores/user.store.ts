@@ -34,6 +34,10 @@ export const useUserStore = defineStore('user', () => {
    * Atualiza a sessão na memória, LocalStorage e nos cabeçalhos HTTP do Axios
    */
   function setSession(newToken: string | null, user: User | null): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('userID');
+
     token.value = newToken;
     currentUser.value = user;
 
@@ -41,16 +45,12 @@ export const useUserStore = defineStore('user', () => {
       localStorage.setItem('token', newToken);
       api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     } else {
-      localStorage.removeItem('token');
       delete api.defaults.headers.common['Authorization'];
     }
 
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
-      localStorage.setItem('userID', JSON.stringify(user.id));
-    } else {
-      localStorage.removeItem('user');
-      localStorage.removeItem('userID');
+      localStorage.setItem('userID', String(user.id));
     }
   }
 
@@ -64,12 +64,15 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       const response = await api.post<unknown, AuthResponse>('/users/login', { username, password });
-      
+
       if (response && response.token) {
         setSession(response.token, response.user);
+        
+        // Recarrega a página para aplicar o estado limpo
+        window.location.reload();
         return true;
       }
-      
+
       return 'Resposta inválida do servidor.';
     } catch (err: any) {
       const message = err.response?.data?.message || 'Nome de utilizador ou palavra-passe incorretos.';
@@ -99,6 +102,9 @@ export const useUserStore = defineStore('user', () => {
   function logout(): void {
     setSession(null, null);
     error.value = null;
+    
+    // Recarrega a página e redireciona para a raiz ou login
+    window.location.href = '/';
   }
 
   /**
@@ -114,10 +120,10 @@ export const useUserStore = defineStore('user', () => {
         token.value = savedToken;
         api.defaults.headers.common['Authorization'] = `Bearer ${savedToken}`;
       } catch {
-        logout();
+        setSession(null, null);
       }
     } else {
-      logout();
+      setSession(null, null);
     }
   }
 
