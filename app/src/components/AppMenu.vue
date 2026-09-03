@@ -34,7 +34,7 @@
           <span>Categorias</span>
         </RouterLink>
 
-        <div class="menu-section">GESTÃO</div>
+        <!-- <div class="menu-section">GESTÃO</div>
 
         <RouterLink to="/cartoes" class="menu-item" @click="$emit('close')">
           <i class="pi pi-credit-card"></i>
@@ -44,15 +44,15 @@
         <RouterLink to="/utilizadores" class="menu-item" @click="$emit('close')">
           <i class="pi pi-users"></i>
           <span>Utilizadores</span>
-        </RouterLink>
+        </RouterLink> -->
       </nav>
 
       <div class="sidebar-footer">
         <div class="sidebar-help">
           <i class="pi pi-info-circle"></i>
           <div>
-            <strong>Plano Standard</strong>
-            <small>10.000 Kz / mês</small>
+            <strong>Dev.</strong>
+            <small>Eugénio Cachiombo</small>
           </div>
         </div>
       </div>
