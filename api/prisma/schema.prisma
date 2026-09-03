@@ -8,13 +8,31 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  name     String?
-  username String  @unique @default("empty")
-  password String  @default("empty")
+  id               Int               @id @default(autoincrement())
+  name             String?
+  username         String            @unique @default("empty")
+  password         String            @default("empty")
+  consumptionPlans ConsumptionPlan[]
 }
 
 model Category {
-  id       Int     @id @default(autoincrement())
-  name     String
+  id               Int               @id @default(autoincrement())
+  name             String
+  consumptionPlans ConsumptionPlan[]
+}
+
+model ConsumptionPlan {
+  id         Int      @id @default(autoincrement())
+  amount     Decimal  @db.Decimal(10, 2)
+  month      Int
+  year       Int
+  userId     Int      @map("user_id")
+  categoryId Int      @map("category_id")
+
+  // Relationships
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@unique([userId, categoryId, month, year])
+  @@map("consumption_plans")
 }
