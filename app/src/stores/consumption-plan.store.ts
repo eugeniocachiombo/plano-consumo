@@ -32,7 +32,7 @@ export interface UpdateConsumptionPlanPayload {
 }
 
 export const useConsumptionPlanStore = defineStore('consumptionPlan', () => {
-  const userId = Number(localStorage.getItem('user')); 
+  const userId = Number(localStorage.getItem('userID')); 
   const consumptionPlans = ref<ConsumptionPlan[]>([]);
   const currentPlan = ref<ConsumptionPlan | null>(null);
   const isLoading = ref<boolean>(false);

@@ -19,7 +19,7 @@ export interface UpdateCategoryPayload {
 }
 
 export const useCategoryStore = defineStore('category', () => {
-  const userId = Number(localStorage.getItem('user'));
+  const userId = Number(localStorage.getItem('userID')); 
   const categories = ref<Category[]>([]);
   const currentCategory = ref<Category | null>(null);
   const isLoading = ref<boolean>(false);
