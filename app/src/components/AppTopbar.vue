@@ -72,7 +72,6 @@ const toggleUserMenu = (event) => {
 // Executa o encerramento da sessão
 const handleLogout = async () => {
   await userStore.logout();
-  router.push('/');
 };
 
 // Confirmação antes de sair
