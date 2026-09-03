@@ -60,6 +60,116 @@
   color: var(--text-color, #f8fafc) !important;
 }
 
+/* =======================================================
+   Campos de formulário (inputs, inputnumber, dropdowns/selects)
+   Adaptados a dark e light mode via variáveis CSS
+   ======================================================= */
+
+/* Estado base: texto, número, etc. */
+:deep(.p-inputtext),
+:deep(.p-inputnumber),
+:deep(.p-inputnumber-input),
+:deep(.custom-dark-input),
+:deep(.custom-dark-input-element) {
+  background: var(--surface-ground, #0f172a) !important;
+  color: var(--text-color, #f8fafc) !important;
+  border: 1px solid var(--surface-border, #334155) !important;
+  border-radius: 8px !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+:deep(.p-inputtext::placeholder),
+:deep(.p-inputnumber-input::placeholder) {
+  color: var(--text-color-secondary, #94a3b8) !important;
+  opacity: 1 !important;
+}
+
+/* Foco */
+:deep(.p-inputtext:enabled:focus),
+:deep(.p-inputnumber:not(.p-disabled).p-focus),
+:deep(.p-inputnumber-input:enabled:focus) {
+  border-color: var(--primary-color, #3b82f6) !important;
+  box-shadow: 0 0 0 1px var(--primary-color, #3b82f6) !important;
+  outline: none !important;
+}
+
+/* Desativado */
+:deep(.p-inputtext:disabled),
+:deep(.p-inputnumber.p-disabled),
+:deep(.p-inputnumber-input:disabled) {
+  background: var(--surface-hover, #334155) !important;
+  color: var(--text-color-secondary, #94a3b8) !important;
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+}
+
+/* Inválido */
+:deep(.p-inputtext.p-invalid),
+:deep(.p-inputnumber.p-invalid .p-inputnumber-input),
+:deep(.p-invalid) {
+  border-color: var(--red-500, #ef4444) !important;
+}
+
+:deep(.p-inputtext.p-invalid:enabled:focus),
+:deep(.p-inputnumber.p-invalid:not(.p-disabled).p-focus) {
+  box-shadow: 0 0 0 1px var(--red-500, #ef4444) !important;
+}
+
+/* Dropdown / Select fechado (cobre p-dropdown do v3 e p-select do v4) */
+:deep(.p-dropdown),
+:deep(.p-select),
+:deep(.custom-dark-input.p-dropdown),
+:deep(.custom-dark-input.p-select) {
+  background: var(--surface-ground, #0f172a) !important;
+  border: 1px solid var(--surface-border, #334155) !important;
+  border-radius: 8px !important;
+  color: var(--text-color, #f8fafc) !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+:deep(.p-dropdown .p-dropdown-label),
+:deep(.p-select .p-select-label) {
+  color: var(--text-color, #f8fafc) !important;
+}
+
+:deep(.p-dropdown-label.p-placeholder),
+:deep(.p-select-label.p-placeholder) {
+  color: var(--text-color-secondary, #94a3b8) !important;
+}
+
+:deep(.p-dropdown .p-dropdown-trigger),
+:deep(.p-select .p-select-dropdown) {
+  color: var(--text-color-secondary, #94a3b8) !important;
+}
+
+/* Foco do dropdown/select */
+:deep(.p-dropdown:not(.p-disabled).p-focus),
+:deep(.p-select:not(.p-disabled).p-focus) {
+  border-color: var(--primary-color, #3b82f6) !important;
+  box-shadow: 0 0 0 1px var(--primary-color, #3b82f6) !important;
+}
+
+/* Inválido do dropdown/select */
+:deep(.p-dropdown.p-invalid),
+:deep(.p-select.p-invalid) {
+  border-color: var(--red-500, #ef4444) !important;
+}
+
+:deep(.p-dropdown.p-invalid:not(.p-disabled).p-focus),
+:deep(.p-select.p-invalid:not(.p-disabled).p-focus) {
+  box-shadow: 0 0 0 1px var(--red-500, #ef4444) !important;
+}
+
+/* Desativado do dropdown/select */
+:deep(.p-dropdown.p-disabled),
+:deep(.p-select.p-disabled) {
+  background: var(--surface-hover, #334155) !important;
+  color: var(--text-color-secondary, #94a3b8) !important;
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+}
+
+/* Painel/overlay do dropdown e select */
 :deep(.p-dropdown-panel),
 :deep(.p-select-overlay),
 :deep(.p-popover) {
