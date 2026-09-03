@@ -45,8 +45,8 @@
         <i class="pi pi-angle-down user-chevron"></i>
       </div>
 
-      <!-- Menu Popup do PrimeVue -->
       <Menu ref="userMenu" id="user_menu" :model="userMenuItems" :popup="true" />
+      <ConfirmDialog />
     </div>
   </header>
 </template>
@@ -56,7 +56,9 @@ import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
-import { useUserStore } from '@/stores/user.store'; // Importe a sua store do utilizador (ajuste o caminho se necessário)
+import ConfirmDialog from 'primevue/confirmdialog';
+import { useConfirm } from 'primevue/useconfirm';
+import { useUserStore } from '@/stores/user.store';
 
 defineProps({
   darkMode: Boolean
@@ -67,7 +69,7 @@ defineEmits(['toggle-menu', 'toggle-dark']);
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
-
+const confirm = useConfirm();
 
 const userMenu = ref(null);
 
@@ -75,14 +77,26 @@ const toggleUserMenu = (event) => {
   userMenu.value.toggle(event);
 };
 
-
+// Executa o encerramento da sessão
 const handleLogout = async () => {
-  if (typeof userStore.logout === 'function') {
     await userStore.logout();
-  }
-  router.push('/');
+    router.push('/');
 };
 
+// Confirmação antes de sair
+const confirmLogout = () => {
+  confirm.require({
+    message: 'Tem certeza de que deseja encerrar a sua sessão?',
+    header: 'Confirmar saída',
+    icon: 'pi pi-exclamation-triangle',
+    rejectLabel: 'Cancelar',
+    acceptLabel: 'Sair',
+    acceptClass: 'p-button-danger',
+    accept: () => {
+      handleLogout();
+    }
+  });
+};
 
 const userMenuItems = ref([
   {
@@ -98,7 +112,7 @@ const userMenuItems = ref([
   {
     label: 'Sair',
     icon: 'pi pi-sign-out',
-    command: handleLogout
+    command: confirmLogout
   }
 ]);
 
