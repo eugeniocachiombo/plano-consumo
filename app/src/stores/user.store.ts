@@ -47,8 +47,10 @@ export const useUserStore = defineStore('user', () => {
 
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
+      localStorage.setItem('userID', JSON.stringify(user.id));
     } else {
       localStorage.removeItem('user');
+      localStorage.removeItem('userID');
     }
   }
 
