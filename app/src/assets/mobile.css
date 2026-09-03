@@ -1,0 +1,286 @@
+@import './crud.css';
+
+/* ==========================================================================
+   UI/UX MOBILE NATIVO - CRUDS & DATATABLES GENÉRICOS (PrimeVue + Vue 3)
+   ========================================================================== */
+
+/* Escondido no Desktop por padrão */
+.fab-mobile-btn {
+  display: none !important;
+}
+
+/* Regras de Reset Globais para remoção da linha branca no Dark Mode */
+:deep(.p-datatable),
+:deep(.p-datatable-wrapper),
+:deep(.p-datatable-footer),
+:deep(.table-card),
+:deep(.p-card) {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:last-child > td) {
+  border-bottom: none !important;
+}
+
+:deep(.p-datatable .p-paginator-bottom),
+:deep(.p-datatable .p-paginator) {
+  border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.08)) !important;
+  border-bottom: none !important;
+}
+
+/* ==========================================================================
+   BREAKPOINT MOBILE (<= 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  /* Container da página */
+  .crud-page-container {
+    padding: 0.75rem 0.5rem 5rem 0.5rem; /* Margem inferior para o FAB */
+  }
+
+  /* Ocultar botões comuns de topo em Mobile */
+  .desktop-only-btn {
+    display: none !important;
+  }
+
+  /* Floating Action Button (FAB) Nativo */
+  .fab-mobile-btn {
+    display: flex !important;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.25rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    z-index: 999;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  :deep(.fab-mobile-btn .pi) {
+    font-size: 1.35rem;
+  }
+
+  /* Cabeçalho de Página */
+  .page-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.875rem;
+    margin-bottom: 1rem;
+  }
+
+  .heading-actions {
+    width: 100%;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 10px;
+  }
+
+  /* Grid de Cards de Métricas / KPI */
+  .kpi-summary-grid {
+    grid-template-columns: 1fr;
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+  }
+
+  .kpi-card {
+    padding: 0.875rem 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+  }
+
+  .kpi-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  /* Barra de Pesquisa e Filtros */
+  .table-card {
+    background: transparent !important;
+  }
+
+  :deep(.table-card .p-card-body) {
+    padding: 0 !important;
+  }
+
+  .filter-top-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .search-container {
+    width: 100%;
+  }
+
+  :deep(.search-input) {
+    min-height: 44px;
+    font-size: 0.9375rem;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .filter-toggle-btn {
+    flex: 1;
+    min-height: 44px;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .refresh-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .filter-selectors-grid.mobile-hidden {
+    display: none;
+  }
+
+  .filter-selectors-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+    padding: 0.875rem;
+    background: var(--surface-card, #ffffff);
+    border-radius: 12px;
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+  }
+
+  :deep(.search-input-field) {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* Transformação de Tabela em Cards Verticais */
+  :deep(.custom-datatable) {
+    background: transparent;
+  }
+
+  :deep(.custom-datatable .p-datatable-header) {
+    padding: 0 0 1rem 0;
+    background: transparent;
+    border: none;
+  }
+
+  :deep(.custom-datatable .p-datatable-thead) {
+    display: none;
+  }
+
+  :deep(.custom-datatable .p-datatable-tbody > tr) {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-card, #ffffff);
+    border: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1));
+    border-radius: 14px;
+    margin-bottom: 0.875rem;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    position: relative;
+  }
+
+  :deep(.custom-datatable .p-datatable-tbody > tr > td) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none !important;
+    padding: 0.4rem 0;
+    width: 100% !important;
+    text-align: right !important;
+    font-size: 0.9375rem;
+  }
+
+  /* Inserção Genérica de Rótulos sem Alterar o DOM via atributo data-label */
+  :deep(.custom-datatable .p-datatable-tbody > tr > td[data-label])::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    color: var(--text-color-secondary, #6c757d);
+  }
+
+  /* Linha de Acções Separada */
+  :deep(.custom-datatable .p-datatable-tbody > tr > td:last-child) {
+    border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 0.1)) !important;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    justify-content: flex-end;
+  }
+
+  :deep(.custom-datatable .p-datatable-tbody > tr > td:last-child)::before {
+    content: '';
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .action-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--surface-hover, rgba(255, 255, 255, 0.05));
+  }
+
+  /* Paginação */
+  :deep(.p-paginator) {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.75rem 0.25rem;
+    border-radius: 12px;
+  }
+
+  :deep(.p-paginator .p-paginator-current) {
+    width: 100%;
+    text-align: center;
+    order: -1;
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  /* Modais / Bottom Sheets */
+  :deep(.crud-dialog) {
+    width: 95vw !important;
+    max-width: 95vw !important;
+    margin: 0 auto;
+    border-radius: 16px;
+  }
+
+  :deep(.crud-dialog .p-dialog-header) {
+    padding: 1.25rem 1.25rem 0.75rem 1.25rem;
+  }
+
+  :deep(.crud-dialog .p-dialog-content) {
+    padding: 0.75rem 1.25rem 1.25rem 1.25rem;
+  }
+
+  .dialog-footer {
+    flex-direction: column-reverse;
+    gap: 0.625rem;
+    margin-top: 1.5rem;
+  }
+
+  .dialog-footer .p-button {
+    width: 100%;
+    justify-content: center;
+    min-height: 46px;
+    font-weight: 600;
+    border-radius: 10px;
+  }
+}

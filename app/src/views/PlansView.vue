@@ -11,24 +11,37 @@ import Dropdown from 'primevue/dropdown';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
+import Badge from 'primevue/badge';
+import ProgressSpinner from 'primevue/progressspinner';
 import { useConsumptionPlanStore } from '@/stores/consumption-plan.store';
 import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 
+// Stores
 const consumptionPlanStore = useConsumptionPlanStore();
 const categoryStore = useCategoryStore();
 
+// UI Utilities
 const toast = useToast();
 const confirm = useConfirm();
 
+// Modal Controls
 const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
 
-const searchQuery = ref('');
+// Table & Pagination
 const rowsPerPage = ref(10);
 
+// Filters State
+const searchQuery = ref('');
+const selectedCategoryFilter = ref(null);
+const selectedMonthFilter = ref(null);
+const selectedYearFilter = ref(null);
+const isFilterExpandedOnMobile = ref(false);
+
+// Form Reactive State
 const form = reactive({
   amount: null,
   month: null,
@@ -38,6 +51,7 @@ const form = reactive({
 
 const fieldErrors = ref({});
 
+// Constants
 const monthsOptions = [
   { label: 'Janeiro', value: 1 },
   { label: 'Fevereiro', value: 2 },
@@ -53,12 +67,84 @@ const monthsOptions = [
   { label: 'Dezembro', value: 12 }
 ];
 
+// Computed Categories Options
 const categoriesOptions = computed(() => {
   return (categoryStore.categories || []).map((c) => ({
     label: c.name,
     value: c.id
   }));
 });
+
+// Computed Available Years
+const yearsOptions = computed(() => {
+  const plans = consumptionPlanStore.consumptionPlans || [];
+  const yearsSet = new Set(plans.map((p) => Number(p.year)).filter((y) => !isNaN(y) && y > 0));
+  
+  const currentYear = new Date().getFullYear();
+  yearsSet.add(currentYear);
+
+  return Array.from(yearsSet)
+    .sort((a, b) => b - a)
+    .map((y) => ({ label: String(y), value: y }));
+});
+
+// Advanced Computed Filtering (Client-side)
+const filteredPlans = computed(() => {
+  let list = consumptionPlanStore.consumptionPlans || [];
+
+  if (searchQuery.value && searchQuery.value.trim() !== '') {
+    const q = searchQuery.value.trim().toLowerCase();
+    list = list.filter((plan) => {
+      const planId = String(plan.id || '');
+      const amount = String(plan.amount || '');
+      const year = String(plan.year || '');
+      const categoryName = getCategoryName(plan.categoryId, plan).toLowerCase();
+      const monthName = getMonthName(plan.month).toLowerCase();
+
+      return (
+        planId.includes(q) ||
+        amount.includes(q) ||
+        year.includes(q) ||
+        categoryName.includes(q) ||
+        monthName.includes(q)
+      );
+    });
+  }
+
+  if (selectedCategoryFilter.value !== null) {
+    list = list.filter((plan) => Number(plan.categoryId) === Number(selectedCategoryFilter.value));
+  }
+
+  if (selectedMonthFilter.value !== null) {
+    list = list.filter((plan) => Number(plan.month) === Number(selectedMonthFilter.value));
+  }
+
+  if (selectedYearFilter.value !== null) {
+    list = list.filter((plan) => Number(plan.year) === Number(selectedYearFilter.value));
+  }
+
+  return list;
+});
+
+const activeFiltersCount = computed(() => {
+  let count = 0;
+  if (searchQuery.value && searchQuery.value.trim() !== '') count++;
+  if (selectedCategoryFilter.value !== null) count++;
+  if (selectedMonthFilter.value !== null) count++;
+  if (selectedYearFilter.value !== null) count++;
+  return count;
+});
+
+const totalPlannedAmount = computed(() => {
+  return filteredPlans.value.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+});
+
+function clearAllFilters() {
+  searchQuery.value = '';
+  selectedCategoryFilter.value = null;
+  selectedMonthFilter.value = null;
+  selectedYearFilter.value = null;
+}
 
 function clearFieldError(field) {
   if (fieldErrors.value[field]) {
@@ -89,25 +175,38 @@ function openCreateDialog() {
 function openEditDialog(plan) {
   isEditing.value = true;
   editingId.value = plan.id;
-  form.amount = Number(plan.amount);
-  form.month = plan.month;
-  form.year = plan.year;
-  form.categoryId = plan.categoryId;
+  form.amount = plan.amount !== null && plan.amount !== undefined ? Number(plan.amount) : null;
+  form.month = plan.month ? Number(plan.month) : null;
+  form.year = plan.year ? Number(plan.year) : new Date().getFullYear();
+  form.categoryId = plan.categoryId ? Number(plan.categoryId) : null;
   fieldErrors.value = {};
   isDialogVisible.value = true;
+}
+
+function validateForm() {
+  const errors = {};
+  if (!form.categoryId) errors.categoryId = 'Selecione uma categoria.';
+  if (!form.month) errors.month = 'Selecione um mês.';
+  if (!form.year || form.year < 2000 || form.year > 2100) errors.year = 'Informe um ano válido.';
+  if (form.amount === null || form.amount === undefined || isNaN(form.amount) || form.amount <= 0) {
+    errors.amount = 'Informe um montante válido maior que 0.';
+  }
+
+  fieldErrors.value = errors;
+  return Object.keys(errors).length === 0;
 }
 
 async function handleSave() {
   if (consumptionPlanStore.isLoading) return;
 
-  fieldErrors.value = {};
+  if (!validateForm()) return;
 
   try {
     const payload = {
-      amount: form.amount !== null && form.amount !== undefined ? Number(form.amount) : null,
-      month: form.month !== null && form.month !== undefined ? Number(form.month) : null,
-      year: form.year !== null && form.year !== undefined ? Number(form.year) : null,
-      categoryId: form.categoryId !== null && form.categoryId !== undefined ? Number(form.categoryId) : null
+      amount: Number(form.amount),
+      month: Number(form.month),
+      year: Number(form.year),
+      categoryId: Number(form.categoryId)
     };
 
     if (isEditing.value) {
@@ -115,8 +214,8 @@ async function handleSave() {
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
-        detail: 'Plano de consumo atualizado com sucesso.',
-        life: 3000
+        detail: 'Plano de consumo actualizado com sucesso.',
+        life: 3500
       });
     } else {
       await consumptionPlanStore.create(payload);
@@ -124,7 +223,7 @@ async function handleSave() {
         severity: 'success',
         summary: 'Sucesso',
         detail: 'Plano de consumo criado com sucesso.',
-        life: 3000
+        life: 3500
       });
     }
 
@@ -138,16 +237,19 @@ async function handleSave() {
 
     toast.add({
       severity: 'error',
-      summary: 'Erro',
-      detail: responseData?.message || 'Por favor, verifique os campos destacados.',
-      life: 4000
+      summary: 'Erro na Operação',
+      detail: responseData?.message || 'Por favor, verifique os campos destacados e tente novamente.',
+      life: 5000
     });
   }
 }
 
 function confirmDelete(plan) {
+  const categoryName = getCategoryName(plan.categoryId, plan);
+  const period = `${getMonthName(plan.month)} / ${plan.year}`;
+
   confirm.require({
-    message: 'Tem a certeza que deseja eliminar este plano de consumo? Esta acção não pode ser desfeita.',
+    message: `Tem a certeza que deseja eliminar o plano de consumo da categoria "${categoryName}" referente a ${period}? Esta acção é irreversível.`,
     header: 'Confirmar Eliminação',
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-secondary p-button-outlined',
@@ -160,16 +262,16 @@ function confirmDelete(plan) {
         toast.add({
           severity: 'success',
           summary: 'Sucesso',
-          detail: 'Registo apagado com sucesso.',
-          life: 3000
+          detail: 'Plano de consumo eliminado com sucesso.',
+          life: 3500
         });
       } catch (error) {
         const responseData = error?.response?.data;
         toast.add({
           severity: 'error',
-          summary: 'Erro',
+          summary: 'Erro ao Eliminar',
           detail: responseData?.message || 'Não foi possível eliminar o plano de consumo.',
-          life: 4000
+          life: 5000
         });
       }
     }
@@ -185,31 +287,31 @@ async function reloadData() {
   } catch (error) {
     toast.add({
       severity: 'error',
-      summary: 'Erro',
-      detail: 'Não foi possível carregar os dados.',
-      life: 4000
+      summary: 'Erro de Carregamento',
+      detail: 'Não foi possível carregar os dados dos planos.',
+      life: 5000
     });
   }
 }
 
 function formatCurrency(value) {
-  if (value === null || value === undefined) return '0,00 Kz';
+  if (value === null || value === undefined || isNaN(Number(value))) return '0,00 Kz';
   return new Intl.NumberFormat('pt-AO', {
     style: 'currency',
     currency: 'AOA',
     minimumFractionDigits: 2
-  }).format(value);
+  }).format(Number(value));
 }
 
 function getMonthName(monthNumber) {
-  const found = monthsOptions.find((m) => m.value === monthNumber);
-  return found ? found.label : String(monthNumber);
+  const found = monthsOptions.find((m) => m.value === Number(monthNumber));
+  return found ? found.label : String(monthNumber || '');
 }
 
 function getCategoryName(categoryId, rowData) {
   if (rowData?.category?.name) return rowData.category.name;
   const list = categoryStore.categories || [];
-  const cat = list.find((c) => c.id === categoryId);
+  const cat = list.find((c) => Number(c.id) === Number(categoryId));
   return cat ? cat.name : `Categoria #${categoryId}`;
 }
 
@@ -221,9 +323,9 @@ onMounted(async () => {
 <template>
   <Toast position="top-right" />
 
-  <ConfirmDialog class="custom-dark-dialog" append-to="self" />
+  <ConfirmDialog class="theme-adapted-dialog" append-to="self" />
 
-  <section class="consumption-plan-page">
+  <section class="consumption-plan-page category-page">
     <!-- Cabeçalho da Página -->
     <header class="page-heading">
       <div class="heading-content">
@@ -250,86 +352,214 @@ onMounted(async () => {
       </div>
     </header>
 
+    <!-- Resumo Orçamental (KPI Summary Grid) -->
+    <div class="kpi-summary-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon bg-primary-soft">
+          <i class="pi pi-wallet"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Total Planeado (Filtrado)</span>
+          <span class="kpi-value text-green-value">{{ formatCurrency(totalPlannedAmount) }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon bg-info-soft">
+          <i class="pi pi-list"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Planos Exibidos</span>
+          <span class="kpi-value">{{ filteredPlans.length }} / {{ consumptionPlanStore.consumptionPlans?.length || 0 }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon bg-warning-soft">
+          <i class="pi pi-filter"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Filtros Activos</span>
+          <span class="kpi-value">
+            {{ activeFiltersCount > 0 ? `${activeFiltersCount} aplicado(s)` : 'Nenhum' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- Card da Tabela e Conteúdo -->
     <Card class="table-card border-none shadow-1">
       <template #content>
         <DataTable
-          :value="consumptionPlanStore.consumptionPlans"
+          :value="filteredPlans"
           :loading="consumptionPlanStore.isLoading"
-          :globalFilterFields="['id', 'amount', 'year']"
-          :filters="{ global: { value: searchQuery, matchMode: 'contains' } }"
           responsiveLayout="scroll"
           paginator
           v-model:rows="rowsPerPage"
           :rowsPerPageOptions="[5, 10, 20, 50]"
           paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="A mostrar {first} até {last} de {totalRecords} planos"
-          emptyMessage="Nenhum plano de consumo encontrado."
           class="custom-datatable p-datatable-sm"
           dataKey="id"
         >
+          <!-- Cabeçalho Integrado -->
           <template #header>
-            <div class="table-header">
-              <div class="search-container">
-                <i class="pi pi-search search-icon" aria-hidden="true" />
-                <InputText
-                  v-model="searchQuery"
-                  placeholder="Pesquisar por ID, montante ou ano..."
-                  class="search-input dark-field"
-                  aria-label="Pesquisar planos de consumo"
-                />
-                <Button
-                  v-if="searchQuery"
-                  icon="pi pi-times"
-                  class="p-button-text p-button-rounded clear-search-btn"
-                  aria-label="Limpar pesquisa"
-                  @click="searchQuery = ''"
-                />
+            <div class="table-header-wrapper table-header">
+              <div class="filter-top-row">
+                <div class="search-container">
+                  <i class="pi pi-search search-icon" aria-hidden="true" />
+                  <InputText
+                    v-model="searchQuery"
+                    placeholder="Pesquisar por ID, categoria, mês, ano ou montante..."
+                    class="search-input theme-input"
+                    aria-label="Pesquisar planos de consumo"
+                  />
+                  <Button
+                    v-if="searchQuery"
+                    icon="pi pi-times"
+                    class="p-button-text p-button-rounded clear-search-btn"
+                    aria-label="Limpar pesquisa"
+                    @click="searchQuery = ''"
+                  />
+                </div>
+
+                <div class="toolbar-actions">
+                  <Button
+                    class="p-button-outlined p-button-secondary filter-toggle-btn sm:hidden"
+                    :class="{ 'filter-active': activeFiltersCount > 0 }"
+                    @click="isFilterExpandedOnMobile = !isFilterExpandedOnMobile"
+                  >
+                    <i class="pi pi-filter"></i>
+                    <span>Filtros</span>
+                    <Badge v-if="activeFiltersCount > 0" :value="activeFiltersCount" severity="info" />
+                  </Button>
+
+                  <Button
+                    icon="pi pi-refresh"
+                    class="p-button-text p-button-secondary p-button-rounded refresh-btn"
+                    v-tooltip.top="'Actualizar lista'"
+                    aria-label="Actualizar lista de planos de consumo"
+                    :loading="consumptionPlanStore.isLoading"
+                    @click="reloadData"
+                  />
+                </div>
               </div>
-              <Button
-                icon="pi pi-refresh"
-                class="p-button-text p-button-secondary p-button-rounded refresh-btn"
-                v-tooltip.top="'Actualizar lista'"
-                aria-label="Actualizar lista de planos de consumo"
-                :loading="consumptionPlanStore.isLoading"
-                @click="reloadData"
-              />
+
+              <!-- Filtros Selectores -->
+              <div class="filter-selectors-grid" :class="{ 'mobile-hidden': !isFilterExpandedOnMobile }">
+                <div class="filter-item">
+                  <label class="filter-label font-medium text-xs">Categoria</label>
+                  <Dropdown
+                    v-model="selectedCategoryFilter"
+                    :options="categoriesOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todas as categorias"
+                    showClear
+                    filter
+                    class="search-input-field theme-input"
+                    panelClass="theme-dropdown-panel"
+                  />
+                </div>
+
+                <div class="filter-item">
+                  <label class="filter-label font-medium text-xs">Mês</label>
+                  <Dropdown
+                    v-model="selectedMonthFilter"
+                    :options="monthsOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todos os meses"
+                    showClear
+                    class="search-input-field theme-input"
+                    panelClass="theme-dropdown-panel"
+                  />
+                </div>
+
+                <div class="filter-item">
+                  <label class="filter-label font-medium text-xs">Ano</label>
+                  <Dropdown
+                    v-model="selectedYearFilter"
+                    :options="yearsOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todos os anos"
+                    showClear
+                    class="search-input-field theme-input"
+                    panelClass="theme-dropdown-panel"
+                  />
+                </div>
+
+                <div class="filter-item filter-action-item">
+                  <Button
+                    v-if="activeFiltersCount > 0"
+                    label="Limpar Filtros"
+                    icon="pi pi-filter-slash"
+                    class="p-button-text p-button-danger p-button-sm btn-clear-filters"
+                    @click="clearAllFilters"
+                  />
+                </div>
+              </div>
+
+              <!-- Chips de Filtros Activos -->
+              <div v-if="activeFiltersCount > 0" class="active-chips-bar">
+                <span class="chips-title">Filtros aplicados:</span>
+                <Tag v-if="searchQuery" severity="info" class="filter-chip">
+                  <span>Pesquisa: "{{ searchQuery }}"</span>
+                  <i class="pi pi-times chip-remove" @click="searchQuery = ''"></i>
+                </Tag>
+                <Tag v-if="selectedCategoryFilter !== null" severity="info" class="filter-chip">
+                  <span>Cat: {{ getCategoryName(selectedCategoryFilter) }}</span>
+                  <i class="pi pi-times chip-remove" @click="selectedCategoryFilter = null"></i>
+                </Tag>
+                <Tag v-if="selectedMonthFilter !== null" severity="info" class="filter-chip">
+                  <span>Mês: {{ getMonthName(selectedMonthFilter) }}</span>
+                  <i class="pi pi-times chip-remove" @click="selectedMonthFilter = null"></i>
+                </Tag>
+                <Tag v-if="selectedYearFilter !== null" severity="info" class="filter-chip">
+                  <span>Ano: {{ selectedYearFilter }}</span>
+                  <i class="pi pi-times chip-remove" @click="selectedYearFilter = null"></i>
+                </Tag>
+              </div>
             </div>
           </template>
 
           <template #loading>
             <div class="table-loading-state">
-              <i class="pi pi-spin pi-spinner text-2xl text-primary mb-2"></i>
-              <span>A carregar os seus planos de consumo...</span>
+              <ProgressSpinner style="width: 40px; height: 40px" strokeWidth="4" />
+              <span>A carregar planos de consumo...</span>
             </div>
           </template>
 
           <template #empty>
             <div class="empty-state">
               <div class="empty-icon-wrapper">
-                <i class="pi pi-folder-open"></i>
+                <i :class="activeFiltersCount > 0 ? 'pi pi-filter-slash' : 'pi pi-folder-open'"></i>
               </div>
-              <p class="empty-title">Nenhum plano de consumo encontrado</p>
-              <p class="empty-subtitle" v-if="searchQuery">
-                Nenhum resultado corresponde à pesquisa "<strong>{{ searchQuery }}</strong>".
-              </p>
-              <p class="empty-subtitle" v-else>
-                Comece por adicionar o seu primeiro plano de consumo.
-              </p>
-              <Button
-                v-if="!searchQuery"
-                label="Criar Plano"
-                icon="pi pi-plus"
-                class="p-button-outlined p-button-sm mt-3"
-                @click="openCreateDialog"
-              />
-              <Button
-                v-else
-                label="Limpar Pesquisa"
-                icon="pi pi-filter-slash"
-                class="p-button-text p-button-sm mt-3"
-                @click="searchQuery = ''"
-              />
+
+              <template v-if="activeFiltersCount > 0">
+                <p class="empty-title">Nenhum resultado encontrado</p>
+                <p class="empty-subtitle">
+                  Não encontramos nenhum plano de consumo correspondente aos filtros seleccionados.
+                </p>
+                <Button
+                  label="Limpar Filtros"
+                  icon="pi pi-filter-slash"
+                  class="p-button-outlined p-button-sm mt-3"
+                  @click="clearAllFilters"
+                />
+              </template>
+
+              <template v-else>
+                <p class="empty-title">Ainda não existem planos de consumo</p>
+                <p class="empty-subtitle">
+                  Comece por planear os seus orçamentos mensais adicionando o seu primeiro registo.
+                </p>
+                <Button
+                  label="Criar Novo Plano"
+                  icon="pi pi-plus"
+                  class="p-button-primary p-button-sm mt-3"
+                  @click="openCreateDialog"
+                />
+              </template>
             </div>
           </template>
 
@@ -341,7 +571,7 @@ onMounted(async () => {
 
           <Column field="categoryId" header="Categoria" sortable>
             <template #body="{ data }">
-              <span class="font-medium">{{ getCategoryName(data.categoryId, data) }}</span>
+              <span class="category-name-cell">{{ getCategoryName(data.categoryId, data) }}</span>
             </template>
           </Column>
 
@@ -359,7 +589,7 @@ onMounted(async () => {
 
           <Column field="amount" header="Montante Planeado" sortable>
             <template #body="{ data }">
-              <span class="font-semibold text-green-400">
+              <span class="font-semibold text-green-value">
                 {{ formatCurrency(data.amount) }}
               </span>
             </template>
@@ -397,12 +627,12 @@ onMounted(async () => {
       :dismissableMask="!consumptionPlanStore.isLoading"
       :closable="!consumptionPlanStore.isLoading"
       append-to="self"
-      class="consumption-plan-dialog custom-dark-dialog"
+      class="consumption-plan-dialog theme-adapted-dialog"
       style="width: 100%; max-width: 500px"
     >
-      <form @submit.prevent="handleSave" class="w-full flex flex-col gap-5 pt-2" novalidate>
+      <form @submit.prevent="handleSave" class="form-grid" novalidate>
         <!-- Categoria -->
-        <div class="w-full flex flex-col gap-1.5">
+        <div class="field">
           <label for="plan-category" class="required-label font-medium text-sm">Categoria</label>
           <Dropdown
             id="plan-category"
@@ -413,8 +643,8 @@ onMounted(async () => {
             filter
             showClear
             placeholder="Selecione uma categoria"
-            class="w-full search-input-field custom-dark-input"
-            panelClass="custom-dark-dropdown-panel"
+            class="w-full search-input-field theme-input"
+            panelClass="theme-dropdown-panel"
             :class="{ 'p-invalid': !!fieldErrors.categoryId }"
             :invalid="!!fieldErrors.categoryId"
             :disabled="consumptionPlanStore.isLoading"
@@ -422,7 +652,12 @@ onMounted(async () => {
             @change="clearFieldError('categoryId')"
             @update:modelValue="clearFieldError('categoryId')"
           />
-          <small id="plan-category-error" v-if="fieldErrors.categoryId" class="p-error-message text-red-400 text-xs flex items-center gap-1 mt-1" role="alert">
+          <small
+            id="plan-category-error"
+            v-if="fieldErrors.categoryId"
+            class="p-error-message"
+            role="alert"
+          >
             <i class="pi pi-exclamation-circle"></i>
             <span>{{ getErrorMessage(fieldErrors.categoryId) }}</span>
           </small>
@@ -430,7 +665,7 @@ onMounted(async () => {
 
         <!-- Mês + Ano -->
         <div class="w-full flex flex-col sm:flex-row gap-4">
-          <div class="w-full sm:w-1/2 flex flex-col gap-1.5">
+          <div class="w-full sm:w-1/2 field">
             <label for="plan-month" class="required-label font-medium text-sm">Mês</label>
             <Dropdown
               id="plan-month"
@@ -439,8 +674,8 @@ onMounted(async () => {
               optionLabel="label"
               optionValue="value"
               placeholder="Mês"
-              class="w-full search-input-field custom-dark-input"
-              panelClass="custom-dark-dropdown-panel"
+              class="w-full search-input-field theme-input"
+              panelClass="theme-dropdown-panel"
               :class="{ 'p-invalid': !!fieldErrors.month }"
               :invalid="!!fieldErrors.month"
               :disabled="consumptionPlanStore.isLoading"
@@ -448,13 +683,18 @@ onMounted(async () => {
               @change="clearFieldError('month')"
               @update:modelValue="clearFieldError('month')"
             />
-            <small id="plan-month-error" v-if="fieldErrors.month" class="p-error-message text-red-400 text-xs flex items-center gap-1 mt-1" role="alert">
+            <small
+              id="plan-month-error"
+              v-if="fieldErrors.month"
+              class="p-error-message"
+              role="alert"
+            >
               <i class="pi pi-exclamation-circle"></i>
               <span>{{ getErrorMessage(fieldErrors.month) }}</span>
             </small>
           </div>
 
-          <div class="w-full sm:w-1/2 flex flex-col gap-1.5">
+          <div class="w-full sm:w-1/2 field">
             <label for="plan-year" class="required-label font-medium text-sm">Ano</label>
             <InputNumber
               id="plan-year"
@@ -462,17 +702,21 @@ onMounted(async () => {
               :useGrouping="false"
               :min="2000"
               :max="2100"
-              disabled
               placeholder="Ex: 2026"
-              class="w-full search-input-field custom-dark-input"
-              inputClass="custom-dark-input-element w-full"
+              class="w-full search-input-field theme-input"
+              inputClass="theme-input-element w-full"
               :class="{ 'p-invalid': !!fieldErrors.year }"
               :invalid="!!fieldErrors.year"
               :disabled="consumptionPlanStore.isLoading"
               aria-describedby="plan-year-error"
               @update:modelValue="clearFieldError('year')"
             />
-            <small id="plan-year-error" v-if="fieldErrors.year" class="p-error-message text-red-400 text-xs flex items-center gap-1 mt-1" role="alert">
+            <small
+              id="plan-year-error"
+              v-if="fieldErrors.year"
+              class="p-error-message"
+              role="alert"
+            >
               <i class="pi pi-exclamation-circle"></i>
               <span>{{ getErrorMessage(fieldErrors.year) }}</span>
             </small>
@@ -480,7 +724,7 @@ onMounted(async () => {
         </div>
 
         <!-- Montante -->
-        <div class="w-full flex flex-col gap-1.5">
+        <div class="field">
           <label for="plan-amount" class="required-label font-medium text-sm">Montante Planeado (Kz)</label>
           <InputNumber
             id="plan-amount"
@@ -491,22 +735,27 @@ onMounted(async () => {
             :minFractionDigits="2"
             :maxFractionDigits="2"
             placeholder="0,00"
-            class="w-full search-input-field custom-dark-input"
-            inputClass="custom-dark-input-element w-full"
+            class="w-full search-input-field theme-input"
+            inputClass="theme-input-element w-full"
             :class="{ 'p-invalid': !!fieldErrors.amount }"
             :invalid="!!fieldErrors.amount"
             :disabled="consumptionPlanStore.isLoading"
             aria-describedby="plan-amount-error"
             @update:modelValue="clearFieldError('amount')"
           />
-          <small id="plan-amount-error" v-if="fieldErrors.amount" class="p-error-message text-red-400 text-xs flex items-center gap-1 mt-1" role="alert">
+          <small
+            id="plan-amount-error"
+            v-if="fieldErrors.amount"
+            class="p-error-message"
+            role="alert"
+          >
             <i class="pi pi-exclamation-circle"></i>
             <span>{{ getErrorMessage(fieldErrors.amount) }}</span>
           </small>
         </div>
 
-        <!-- Ações -->
-        <div class="w-full flex justify-end gap-3 pt-3 mt-1 border-t border-[var(--surface-border)]">
+        <!-- Rodapé do Dialog -->
+        <div class="dialog-footer">
           <Button
             type="button"
             label="Cancelar"
@@ -528,6 +777,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-  @import "../assets/table.css";
-  @import "../assets/dialog.css";
+  @import '../assets/crud.css';
+  @import '../assets/mobile.css';
 </style>
