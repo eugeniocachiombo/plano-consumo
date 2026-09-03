@@ -1,851 +1,229 @@
-# PROMPT — IMPLEMENTAÇÃO DE CRUD COMPLETO COM BASE NA ARQUITECTURA EXISTENTE
+# GERAR MÓDULO CRUD A PARTIR DA MIGRATION
 
-Quero implementar um **CRUD completo e funcional** para a entidade/modelo que vou fornecer, respeitando rigorosamente a arquitectura, estrutura de pastas, padrões de código, validações, tratamento de erros, comunicação com API e identidade visual já existentes no projecto.
+Com base na **migration fornecida** e nos **4 códigos de referência**, gere exactamente estes **4 ficheiros**:
 
-## 1. REGRA PRINCIPAL
+1. `NOME.repository.ts`
+2. `NOME.routes.ts`
+3. `NOME.store.ts`
+4. `NOME.vue`
 
-**Não cries uma arquitectura nova.**
+### Regras obrigatórias
 
-A entidade que vou fornecer deve comportar-se como uma extensão natural da aplicação existente.
-
-Antes de gerar qualquer código:
-
-1. Analisa cuidadosamente todos os códigos de referência fornecidos.
-2. Identifica a arquitectura actualmente utilizada.
-3. Identifica como o backend está estruturado.
-4. Identifica como `Crud`, `Repository`, `errorReport` e as rotas são utilizados.
-5. Identifica como a store Pinia é estruturada.
-6. Identifica como o serviço `api` é utilizado.
-7. Identifica o padrão visual das páginas Vue.
-8. Identifica como as validações são implementadas.
-9. Identifica como os erros da API são tratados no frontend.
-10. Analisa o Model que será fornecido.
-11. Identifica todos os campos, tipos, relações, campos opcionais, campos obrigatórios e constraints existentes.
-12. Só depois disso gera os ficheiros necessários.
-
-**Não inventes estruturas, campos, endpoints, relações, regras de negócio ou configurações que não existam.**
-
----
-
-# 2. CONTEXTO DO PROJECTO
-
-O projecto utiliza:
-
-### Backend
-
-* Node.js
-* TypeScript
-* Express
-* Prisma ORM
-* PostgreSQL
-* Zod para validação
-* bcrypt apenas quando houver campos de palavra-passe
-* JWT apenas quando realmente necessário
-* Repository Pattern
-* Classe base `Crud` já existente
-* Tratamento centralizado de erros através de `errorReport`
-
-### Frontend
-
-* Vue 3
-* TypeScript
-* Composition API
-* `<script setup>`
-* Pinia
-* Axios através do serviço `api` já existente
-* PrimeVue
-* Tailwind CSS, caso já seja utilizado no projecto
-* Vue Router
-* Toast através do PrimeVue
-* Suporte a dark mode, caso já exista
+* Use a migration como fonte da estrutura dos campos, tipos e relações.
+* Use os códigos de referência exclusivamente como padrão de **arquitectura, estrutura, nomenclatura, lógica, validações, tratamento de erros, integração API e layout/design**.
+* **Não altere a lógica existente dos códigos de referência**, excepto o necessário para adaptar ao novo módulo/migration.
+* Preserve o mesmo padrão de CRUD: listar, procurar, criar, actualizar e eliminar.
+* Respeite rigorosamente as validações existentes e adapte-as aos campos da migration.
+* Backend (`repository` e `routes`) deve usar **inglês** para nomes técnicos, funções, variáveis e estruturas.
+* A interface Vue deve apresentar textos em **Português de Angola (pt-AO)**.
+* Preserve o mesmo padrão visual, responsividade, componentes PrimeVue, filtros, paginação, dialogs, mensagens, estados de loading, confirmações e tratamento de erros da referência.
+* Mantenha a mesma estrutura de imports e organização do código sempre que aplicável.
+* Não introduza bibliotecas, funcionalidades, abstrações ou padrões que não existam nas referências.
+* Não invente campos, relações, regras ou funcionalidades que não possam ser justificadas pela migration ou pelas referências.
+* **Não escreva comentários dentro dos códigos.**
+* Não explique o código.
+* Não apresente texto adicional.
+* Entregue **somente os 4 ficheiros completos**, cada um identificado pelo respectivo nome.
+* O código deve estar pronto para copiar e utilizar no projecto.
 
 ---
 
-# 3. CÓDIGOS DE REFERÊNCIA
+## CÓDIGOS DE REFERÊNCIA
 
-Os códigos que serão fornecidos abaixo são **exclusivamente referências arquitecturais**.
-
-Utiliza-os para compreender:
-
-* estrutura de pastas;
-* organização dos ficheiros;
-* padrão dos repositories;
-* utilização da classe `Crud`;
-* validações Zod;
-* tratamento de erros;
-* estrutura das rotas Express;
-* utilização do Prisma;
-* estrutura das stores Pinia;
-* utilização do serviço `api`;
-* comunicação frontend/backend;
-* padrão das páginas Vue;
-* utilização dos componentes PrimeVue;
-* padrão visual;
-* mensagens de sucesso e erro;
-* loading;
-* formulários;
-* dialogs;
-* tabelas;
-* confirmações;
-* tratamento de relacionamentos.
-
-**Não copies literalmente a lógica da entidade de referência.**
-
-Se os códigos de referência forem de `User`, `Signup`, `Login` ou autenticação, a lógica específica de:
-
-* username;
-* password;
-* bcrypt;
-* JWT;
-* autenticação;
-* sessão;
-* tokens;
-* login;
-* logout;
-
-deve permanecer exclusivamente no módulo de autenticação.
-
-Não adicionar essas funcionalidades à nova entidade, excepto se o Model fornecido possuir explicitamente essa necessidade.
-
----
-
-# 4. ENTIDADE A IMPLEMENTAR
-
-Na próxima mensagem vou fornecer o **Model/entidade** que deverá ser implementado.
-
-O Model fornecido será a **fonte principal para determinar**:
-
-* nome da entidade;
-* campos;
-* tipos;
-* relações;
-* IDs;
-* campos opcionais;
-* campos obrigatórios;
-* enums;
-* constraints;
-* foreign keys;
-* nomes utilizados pelo Prisma.
-
-**Não inventes campos que não estejam presentes no Model ou nos códigos existentes.**
-
-<model>
-COLOCAREI O MODEL AQUI NA PRÓXIMA MENSAGEM
-</model>
-
----
-
-# 5. BACKEND — REPOSITORY
-
-Criar ou actualizar o Repository da entidade seguindo **exactamente o padrão do Repository de referência**.
-
-O Repository deve:
-
-* utilizar a classe `Crud` existente;
-* seguir o mesmo padrão de constructor;
-* utilizar Prisma;
-* definir `createSchema`;
-* definir `updateSchema`;
-* criar os respectivos tipos TypeScript;
-* implementar `beforeCreate` apenas quando necessário;
-* implementar `beforeUpdate` apenas quando necessário;
-* reutilizar funcionalidades herdadas da classe `Crud`;
-* não duplicar funcionalidades existentes na classe base;
-* respeitar os campos e relações reais do Model.
-
-Exemplo conceptual:
+### 1. Repository
 
 ```ts
-class CategoryRepository extends Crud {
-    constructor() {
-        super("category", {
-            create: createCategorySchema,
-            update: updateCategorySchema
-        });
-    }
-}
-```
-
-**Este exemplo é apenas ilustrativo.**
-
-Adapta obrigatoriamente ao padrão real encontrado nos ficheiros fornecidos.
-
----
-
-# 6. VALIDAÇÃO — ZOD
-
-Criar as validações Zod necessárias para:
-
-* criação;
-* actualização.
-
-As validações devem ser baseadas nos campos reais da entidade.
-
-Exemplo conceptual:
-
-```ts
-export const createCategorySchema = z.object({
-    name: z.string()
-        .min(1, "O nome é obrigatório")
-        .max(100, "O nome não pode ultrapassar 100 caracteres")
-});
-
-export const updateCategorySchema =
-    createCategorySchema.partial();
-```
-
-Não copies este exemplo se ele não corresponder ao Model.
-
-Respeita:
-
-* tipos;
-* campos obrigatórios;
-* campos opcionais;
-* limites;
-* enums;
-* relações;
-* valores permitidos;
-* constraints já existentes.
-
-**Não inventes regras de negócio sem fundamento no código fornecido.**
-
----
-
-# 7. ROUTES — EXPRESS
-
-Criar ou actualizar as rotas necessárias para o CRUD.
-
-Seguir exactamente o padrão das rotas existentes.
-
-Normalmente:
-
-```text
-POST   /entidade
-GET    /entidade
-GET    /entidade/:id
-PUT    /entidade/:id
-DELETE /entidade/:id
-```
-
-Mas utiliza os endpoints e convenções encontrados nos códigos de referência quando estes forem diferentes.
-
-O tratamento de erros deve seguir o padrão existente:
-
-```ts
-try {
-    ...
-} catch (error) {
-    return errorReport(res, error);
-}
-```
-
-Não criar um novo sistema de tratamento de erros.
-
----
-
-# 8. RESPOSTAS HTTP
-
-Respeitar o padrão existente.
-
-Quando aplicável:
-
-```text
-POST       → 201
-GET        → 200
-GET /:id   → 200
-PUT        → 200
-DELETE     → 200
-```
-
-As mensagens devem ser claras e estar em português.
-
-Exemplo:
-
-```json
-{
-    "message": "Registo criado com sucesso"
-}
-```
-
-Não devolver informações internas ou sensíveis.
-
----
-
-# 9. FRONTEND — STORE PINIA
-
-Criar ou actualizar a store Pinia da entidade.
-
-Exemplo:
-
-```text
-category.store.ts
-```
-
-A store deve seguir exactamente o padrão existente no projecto.
-
-Deve utilizar:
-
-```ts
-defineStore
-```
-
-e, quando aplicável:
-
-```ts
-setup store / Composition API
-```
-
-Deve possuir, conforme o padrão existente:
-
-* estado;
-* loading;
-* error;
-* listagem;
-* consulta individual;
-* criação;
-* actualização;
-* eliminação.
-
-Implementar métodos equivalentes a:
-
-```ts
-list()
-find(id)
-create(payload)
-update(id, payload)
-remove(id)
-```
-
-Utilizar o serviço `api` existente:
-
-```ts
-import { api } from '@/services/api';
-```
-
-ou o caminho real identificado nos códigos fornecidos.
-
-**Não criar uma nova instância Axios.**
-
-Não criar:
-
-* novo `baseURL`;
-* novo interceptor;
-* novo cliente HTTP;
-* nova configuração `.env`.
-
----
-
-# 10. FRONTEND — PÁGINA CRUD
-
-Criar ou actualizar a View da entidade.
-
-Exemplo:
-
-```text
-CategoryView.vue
-```
-
-O caminho deve seguir a estrutura real do projecto.
-
-A página deve utilizar:
-
-* Vue 3;
-* `<script setup>`;
-* TypeScript;
-* Composition API;
-* PrimeVue;
-* Pinia;
-* Tailwind, se já utilizado;
-* Toast;
-* Vue Router, quando necessário.
-
----
-
-# 11. LISTAGEM
-
-A página deve apresentar uma listagem funcional através dos componentes PrimeVue já utilizados no projecto.
-
-Incluir, quando aplicável:
-
-* DataTable;
-* colunas correspondentes aos campos relevantes;
-* loading;
-* estado vazio;
-* paginação;
-* pesquisa;
-* filtros;
-* ordenação.
-
-Não adicionar funcionalidades desnecessárias se elas não fizerem parte do padrão existente.
-
----
-
-# 12. CRIAÇÃO
-
-Implementar formulário de criação através do padrão visual existente.
-
-Utilizar os componentes PrimeVue adequados aos tipos dos campos:
-
-* `InputText`;
-* `InputNumber`;
-* `Password`;
-* `Select`/`Dropdown`;
-* `DatePicker`;
-* `Checkbox`;
-* `ToggleSwitch`;
-* `Textarea`;
-* ou outros componentes já utilizados no projecto.
-
-O componente deve ser escolhido de acordo com o tipo real do campo.
-
----
-
-# 13. EDIÇÃO
-
-Implementar edição do registo seleccionado.
-
-Pode reutilizar o mesmo formulário de criação quando esse for o padrão existente.
-
-Ao editar:
-
-* carregar os dados correctos;
-* preencher o formulário;
-* validar os campos;
-* enviar apenas os dados necessários;
-* actualizar a listagem;
-* apresentar feedback de sucesso ou erro.
-
----
-
-# 14. ELIMINAÇÃO
-
-Implementar eliminação com confirmação.
-
-Utilizar o mecanismo de confirmação já existente no projecto.
-
-Após eliminação:
-
-* actualizar a listagem;
-* mostrar Toast de sucesso;
-* tratar erros adequadamente.
-
----
-
-# 15. VALIDAÇÃO NO FRONTEND
-
-Implementar validação dos campos antes de enviar os dados.
-
-Os erros devem ser apresentados individualmente junto aos respectivos campos.
-
-Exemplo:
-
-```ts
-fieldErrors.name
-fieldErrors.description
-```
-
-Quando a API devolver:
-
-```json
-{
-    "message": "Dados inválidos",
-    "errors": {
-        "name": [
-            "O nome é obrigatório"
-        ]
-    }
-}
-```
-
-mostrar o erro no campo correspondente.
-
-Quando o utilizador começar a corrigir um campo, limpar o respectivo erro.
-
-A validação frontend não substitui a validação backend.
-
-A validação definitiva deve continuar a ser realizada pelo Zod no backend.
-
----
-
-# 16. TRATAMENTO DE ERROS
-
-Não utilizar simplesmente:
-
-```ts
-catch (error) {
-    console.log(error);
-}
-```
-
-Os erros devem seguir o padrão existente.
-
-No backend:
-
-```ts
-return errorReport(res, error);
-```
-
-No frontend interpretar correctamente, conforme o padrão existente:
-
-```ts
-error.response?.data?.message
-error.response?.data?.errors
-```
-
-Apresentar mensagens amigáveis ao utilizador.
-
-Não expor:
-
-* stack traces;
-* queries SQL;
-* detalhes internos;
-* credenciais;
-* tokens;
-* informações sensíveis.
-
----
-
-# 17. RELACIONAMENTOS
-
-Se o Model possuir relacionamentos, implementá-los correctamente.
-
-Exemplos:
-
-```text
-Product → Category
-Employee → Department
-Product → Supplier
-```
-
-Quando necessário:
-
-* carregar dados relacionados;
-* utilizar `Select`/`Dropdown`;
-* enviar IDs;
-* respeitar foreign keys;
-* tratar valores nulos;
-* evitar enviar objectos completos quando a API espera apenas IDs.
-
-Utilizar exactamente os relacionamentos existentes no Model.
-
----
-
-# 18. PRISMA
-
-Respeitar integralmente o Model Prisma fornecido.
-
-Não alterar sem necessidade:
-
-* nomes de campos;
-* tipos;
-* IDs;
-* relacionamentos;
-* enums;
-* constraints;
-* foreign keys.
-
-Se for realmente necessária uma alteração ao `schema.prisma`, indicar apenas a alteração necessária.
-
-Não criar migrations automaticamente, salvo se eu solicitar.
-
----
-
-# 19. UI/UX
-
-A interface deve parecer que sempre pertenceu ao projecto.
-
-Respeitar:
-
-* identidade visual existente;
-* componentes PrimeVue utilizados;
-* espaçamentos;
-* tipografia;
-* cards;
-* botões;
-* tabelas;
-* dialogs;
-* ícones;
-* cores;
-* dark mode;
-* responsividade.
-
-Não alterar o tema global.
-
-Não criar uma identidade visual diferente.
-
-Não instalar bibliotecas novas se os componentes existentes forem suficientes.
-
----
-
-# 20. AUTENTICAÇÃO
-
-Não alterar o sistema de autenticação existente.
-
-Não adicionar:
-
-* JWT;
-* bcrypt;
-* login;
-* logout;
-* guards;
-* middleware de autenticação;
-
-à nova entidade, excepto se forem explicitamente necessários de acordo com a arquitectura existente e o Model fornecido.
-
-Se as rotas já forem protegidas por middleware existente, reutilizar esse middleware.
-
----
-
-# 21. O QUE NÃO DEVE SER FEITO
-
-NÃO:
-
-* recriar a classe `Crud`;
-* recriar `errorReport`;
-* recriar `api`;
-* recriar Prisma Client;
-* criar uma nova arquitectura;
-* instalar bibliotecas desnecessárias;
-* alterar configurações globais;
-* alterar autenticação existente;
-* copiar lógica de login;
-* adicionar JWT sem necessidade;
-* adicionar bcrypt sem existir password;
-* inventar campos;
-* inventar relações;
-* inventar regras de negócio;
-* criar tabelas novas sem necessidade;
-* criar migrations sem eu solicitar;
-* criar serviços duplicados;
-* criar stores duplicadas;
-* alterar módulos que não estejam relacionados com o CRUD;
-* criar ficheiros desnecessários.
-
----
-
-# 22. REUTILIZAÇÃO OBRIGATÓRIA
-
-Antes de criar qualquer ficheiro:
-
-**Verifica se ele já existe.**
-
-Se existir:
-
-* adapta-o;
-* preserva a estrutura existente;
-* mantém funcionalidades existentes;
-* adiciona apenas o necessário.
-
-Se não existir:
-
-* cria seguindo exactamente o padrão dos ficheiros de referência.
-
-Não duplicar funcionalidades.
-
----
-
-# 23. FICHEIROS A ENTREGAR
-
-Entregar **exclusivamente os ficheiros necessários** para que o CRUD funcione.
-
-Por exemplo:
-
-```text
-backend/repositories/category.repository.ts
-backend/routes/category.routes.ts
-frontend/stores/category.store.ts
-frontend/views/CategoryView.vue
-```
-
-Os caminhos devem ser adaptados aos caminhos reais encontrados no projecto.
-
-Se forem necessários outros ficheiros existentes, actualizar apenas os que realmente precisam de alteração.
-
----
-
-# 24. FORMATO DA RESPOSTA
-
-A resposta final deve conter **APENAS os ficheiros finais necessários**.
-
-Para cada ficheiro utilizar:
-
-```text
-Nome do ficheiro: category.repository.ts
-```
-
-seguido do código completo.
-
-Depois:
-
-```text
-Nome do ficheiro: category.routes.ts
-```
-
-seguido do código completo.
-
-E assim por diante.
-
-### NÃO fornecer:
-
-* tutorial;
-* explicações;
-* análise da implementação;
-* pseudocódigo;
-* código parcial;
-* exemplos fictícios;
-* alternativas;
-* ficheiros desnecessários;
-* ZIP;
-* dependências desnecessárias.
-
-O código deve estar **completo e pronto para copiar directamente para o projecto**.
-
----
-
-# 25. CRITÉRIO FINAL DE ACEITAÇÃO
-
-O resultado deve implementar o fluxo completo:
-
-```text
-Vue
- ↓
-Validação frontend
- ↓
-Pinia Store
- ↓
-api existente
- ↓
-Express Route
- ↓
-Validação Zod
- ↓
-Repository
- ↓
-Prisma
- ↓
-PostgreSQL
- ↓
-Resposta da API
- ↓
-Pinia
- ↓
-Actualização da interface
- ↓
-Toast / tratamento de erros
-```
-
-A nova entidade deve funcionar como parte integrante da arquitectura existente.
-
-**Não quero apenas uma interface visual.**
-
-Quero um CRUD funcional, integrado com o backend, base de dados, validações, store, API e interface existentes.
-
----
-
-# 26. CÓDIGOS DE REFERÊNCIA
-
-Vou fornecer abaixo os códigos existentes que devem ser analisados antes da implementação.
-
-<referencia>
 import { z } from 'zod';
 import { Crud } from "./base/crud.repository";
 
-export const createCategorySchema = z.object({
-    name: z.string().min(1, "O nome da categoria é obrigatório").max(100, "O nome não pode ultrapassar 100 caracteres")
-});
-
-export const updateCategorySchema = createCategorySchema.partial();
-
-export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
-export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
-
-class CategoryRepository extends Crud {
+class ConsumptionPlanRepository extends Crud {
     constructor() {
-        super("category", {
-            create: createCategorySchema,
-            update: updateCategorySchema
+        super("ConsumptionPlan", {
+            create: createConsumptionPlanSchema,
+            update: updateConsumptionPlanSchema
         });
+    }
+
+    async listByUserId(userId: number) {
+        const list = await this.list();
+        return list.filter((plan: any) => plan.userId === userId);
+    }
+
+    async findAndVerifyUser(id: number | string, userId: number) {
+        const item = await this.find(id);
+        if (!item || item.userId !== userId) {
+            throw new Error("Plano de consumo não encontrado ou acesso não autorizado.");
+        }
+        return item;
     }
 }
 
-export const categoryRepository = new CategoryRepository();
 
+function requiredNumber(requiredMsg: string, invalidMsg: string) {
+    return z.number({
+        error: (issue) => {
+            if (issue.input === undefined) return requiredMsg;
+            return invalidMsg;
+        },
+    });
+}
+
+export const createConsumptionPlanSchema = z.object({
+    amount: requiredNumber(
+        "O montante planeado é obrigatório",
+        "O montante deve ser um valor numérico"
+    )
+        .positive("O montante planeado deve ser superior a zero")
+        .max(99999999.99, "O montante não pode ultrapassar 99.999.999,99"),
+
+    month: requiredNumber(
+        "O mês é obrigatório",
+        "Selecione um mês válido"
+    )
+        .int("O mês deve ser um número inteiro")
+        .min(1, "O mês deve estar entre 1 e 12")
+        .max(12, "O mês deve estar entre 1 e 12"),
+
+    year: requiredNumber(
+        "O ano é obrigatório",
+        "Informe um ano válido"
+    )
+        .int("O ano deve ser um número inteiro")
+        .min(2000, "O ano deve ser igual ou superior a 2000")
+        .max(2100, "O ano deve ser inferior a 2100"),
+
+    userId: requiredNumber(
+        "O utilizador é obrigatório",
+        "Selecione um utilizador válido"
+    )
+        .int("Identificador de utilizador inválido")
+        .positive("Selecione um utilizador válido"),
+
+    categoryId: requiredNumber(
+        "A categoria é obrigatória",
+        "Selecione uma categoria válida"
+    )
+        .int("Identificador de categoria inválido")
+        .positive("Selecione uma categoria válida"),
+});
+
+export const updateConsumptionPlanSchema = createConsumptionPlanSchema.partial();
+
+export type CreateConsumptionPlanInput = z.infer<typeof createConsumptionPlanSchema>;
+export type UpdateConsumptionPlanInput = z.infer<typeof updateConsumptionPlanSchema>;
+
+export const consumptionPlanRepository = new ConsumptionPlanRepository();
+```
+
+### 2. Routes
+
+```ts
 import { Router, Request, Response } from "express";
-import { categoryRepository } from "../repository/category.repository";
+import { consumptionPlanRepository } from "../repository/consumption-plan.repository";
 import { errorReport } from "../repository/base/errorHandler.repository";
 
-const categoryRoutes = Router();
+const consumptionPlanRoutes = Router();
 
-categoryRoutes.post("/categories", async (req: Request, res: Response) => {
+consumptionPlanRoutes.post("/consumption-plans", async (req: Request, res: Response) => {
     try {
-        const newCategory = await categoryRepository.create(req.body);
-        return res.status(201).json(newCategory);
+        const userId = Number(req.query.userId);
+        const newPlan = await consumptionPlanRepository.create({ ...req.body, userId });
+        return res.status(201).json(newPlan);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-categoryRoutes.get("/categories", async (_req: Request, res: Response) => {
+consumptionPlanRoutes.get("/consumption-plans", async (req: Request, res: Response) => {
     try {
-        const categories = await categoryRepository.list();
-        return res.status(200).json(categories);
+        const userId = Number(req.query.userId);
+        const plans = await consumptionPlanRepository.listByUserId(userId);
+        return res.status(200).json(plans);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-categoryRoutes.get("/categories/:id", async (req: Request, res: Response) => {
+consumptionPlanRoutes.get("/consumption-plans/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const category = await categoryRepository.find(id);
-        return res.status(200).json(category);
+        const userId = Number(req.query.userId);
+        const plan = await consumptionPlanRepository.findAndVerifyUser(id, userId);
+        return res.status(200).json(plan);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-categoryRoutes.put("/categories/:id", async (req: Request, res: Response) => {
+consumptionPlanRoutes.put("/consumption-plans/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const updatedCategory = await categoryRepository.update(id, req.body);
-        return res.status(200).json(updatedCategory);
+        const userId = Number(req.query.userId);
+        await consumptionPlanRepository.findAndVerifyUser(id, userId);
+
+        const updatedPlan = await consumptionPlanRepository.update(id, req.body);
+        return res.status(200).json(updatedPlan);
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-categoryRoutes.delete("/categories/:id", async (req: Request, res: Response) => {
+consumptionPlanRoutes.delete("/consumption-plans/:id", async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        await categoryRepository.delete(id);
+        const userId = Number(req.query.userId);
+        await consumptionPlanRepository.findAndVerifyUser(id, userId);
+
+        await consumptionPlanRepository.delete(id);
         return res.status(200).json({ message: "Registo apagado com sucesso" });
     } catch (error) {
         return errorReport(res, error);
     }
 });
 
-export { categoryRoutes };
+export { consumptionPlanRoutes };
+```
 
+### 3. Store
+
+```ts
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '@/services/api';
 
-export interface Category {
+export interface ConsumptionPlan {
   id: number;
-  name: string;
+  amount: number;
+  month: number;
+  year: number;
+  userId: number;
+  categoryId: number;
+  category?: {
+    id: number;
+    name: string;
+  };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface CreateCategoryPayload {
-  name: string;
+export interface CreateConsumptionPlanPayload {
+  amount: number;
+  month: number;
+  year: number;
+  categoryId: number;
 }
 
-export interface UpdateCategoryPayload {
-  name?: string;
+export interface UpdateConsumptionPlanPayload {
+  amount?: number;
+  month?: number;
+  year?: number;
+  categoryId?: number;
 }
 
-export const useCategoryStore = defineStore('category', () => {
-  const categories = ref<Category[]>([]);
-  const currentCategory = ref<Category | null>(null);
+export const useConsumptionPlanStore = defineStore('consumptionPlan', () => {
+  const userId = Number(localStorage.getItem('user')); 
+  const consumptionPlans = ref<ConsumptionPlan[]>([]);
+  const currentPlan = ref<ConsumptionPlan | null>(null);
   const isLoading = ref<boolean>(false);
   const error = ref<string | null>(null);
 
@@ -853,15 +231,15 @@ export const useCategoryStore = defineStore('category', () => {
     error.value = null;
   }
 
-  async function list(): Promise<Category[]> {
+  async function list(): Promise<ConsumptionPlan[]> {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.get<unknown, Category[]>('/categories');
-      categories.value = response;
+      const response = await api.get<unknown, ConsumptionPlan[]>(`/consumption-plans/?userId=${userId}`);
+      consumptionPlans.value = response;
       return response;
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Erro ao carregar categorias.';
+      const message = err.response?.data?.message || 'Erro ao carregar planos de consumo.';
       error.value = message;
       throw err;
     } finally {
@@ -869,15 +247,15 @@ export const useCategoryStore = defineStore('category', () => {
     }
   }
 
-  async function find(id: number | string): Promise<Category> {
+  async function find(id: number | string): Promise<ConsumptionPlan> {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.get<unknown, Category>(`/categories/${id}`);
-      currentCategory.value = response;
+      const response = await api.get<unknown, ConsumptionPlan>(`/consumption-plans/${id}?userId=${userId}`);
+      currentPlan.value = response;
       return response;
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Erro ao procurar categoria.';
+      const message = err.response?.data?.message || 'Erro ao procurar plano de consumo.';
       error.value = message;
       throw err;
     } finally {
@@ -885,15 +263,15 @@ export const useCategoryStore = defineStore('category', () => {
     }
   }
 
-  async function create(payload: CreateCategoryPayload): Promise<Category> {
+  async function create(payload: CreateConsumptionPlanPayload): Promise<ConsumptionPlan> {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.post<unknown, Category>('/categories', payload);
+      const response = await api.post<unknown, ConsumptionPlan>(`/consumption-plans?userId=${userId}`, payload);
       await list();
       return response;
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Erro ao criar categoria.';
+      const message = err.response?.data?.message || 'Erro ao criar plano de consumo.';
       error.value = message;
       throw err;
     } finally {
@@ -901,15 +279,15 @@ export const useCategoryStore = defineStore('category', () => {
     }
   }
 
-  async function update(id: number | string, payload: UpdateCategoryPayload): Promise<Category> {
+  async function update(id: number | string, payload: UpdateConsumptionPlanPayload): Promise<ConsumptionPlan> {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.put<unknown, Category>(`/categories/${id}`, payload);
+      const response = await api.put<unknown, ConsumptionPlan>(`/consumption-plans/${id}?userId=${userId}`, payload);
       await list();
       return response;
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Erro ao atualizar categoria.';
+      const message = err.response?.data?.message || 'Erro ao atualizar plano de consumo.';
       error.value = message;
       throw err;
     } finally {
@@ -921,10 +299,10 @@ export const useCategoryStore = defineStore('category', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      await api.delete(`/categories/${id}`);
+      await api.delete(`/consumption-plans/${id}?userId=${userId}`);
       await list();
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Erro ao eliminar categoria.';
+      const message = err.response?.data?.message || 'Erro ao eliminar plano de consumo.';
       error.value = message;
       throw err;
     } finally {
@@ -933,8 +311,8 @@ export const useCategoryStore = defineStore('category', () => {
   }
 
   return {
-    categories,
-    currentCategory,
+    consumptionPlans,
+    currentPlan,
     isLoading,
     error,
     clearError,
@@ -945,66 +323,162 @@ export const useCategoryStore = defineStore('category', () => {
     remove
   };
 });
-</referencia>
+```
 
----
+### 4. Vue
 
-# 27. MODEL DA ENTIDADE
-
-O Model será enviado **numa mensagem separada depois deste prompt**.
-
-Não inventes o Model.
-
-Aguarda pelo Model que será fornecido na próxima mensagem e, com base nele e nos códigos de referência, gera exclusivamente os ficheiros necessários.
-A estilização não deve falhar por favor
-
-<model>
-
-O MODEL SERÁ ENVIADO NA PRÓXIMA MENSAGEM.
-
-</model>
-
-
-<design>
-
+```vue
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import Button from 'primevue/button';
 import Card from 'primevue/card';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
+import Dropdown from 'primevue/dropdown';
 import Toast from 'primevue/toast';
 import ConfirmDialog from 'primevue/confirmdialog';
 import Tag from 'primevue/tag';
+import Badge from 'primevue/badge';
+import ProgressSpinner from 'primevue/progressspinner';
+import { useConsumptionPlanStore } from '@/stores/consumption-plan.store';
 import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 
+// Stores
+const consumptionPlanStore = useConsumptionPlanStore();
 const categoryStore = useCategoryStore();
+
+// UI Utilities
 const toast = useToast();
 const confirm = useConfirm();
 
+// Modal Controls
 const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
 
-// Estados para pesquisa e paginação
-const searchQuery = ref('');
+// Table & Pagination
 const rowsPerPage = ref(10);
 
+// Filters State
+const searchQuery = ref('');
+const selectedCategoryFilter = ref(null);
+const selectedMonthFilter = ref(null);
+const selectedYearFilter = ref(null);
+const isFilterExpandedOnMobile = ref(false);
+
+// Form Reactive State
 const form = reactive({
-  name: ''
+  amount: null,
+  month: null,
+  year: new Date().getFullYear(),
+  categoryId: null
 });
 
-const fieldErrors = ref({
-  name: ''
+const fieldErrors = ref({});
+
+// Constants
+const monthsOptions = [
+  { label: 'Janeiro', value: 1 },
+  { label: 'Fevereiro', value: 2 },
+  { label: 'Março', value: 3 },
+  { label: 'Abril', value: 4 },
+  { label: 'Maio', value: 5 },
+  { label: 'Junho', value: 6 },
+  { label: 'Julho', value: 7 },
+  { label: 'Agosto', value: 8 },
+  { label: 'Setembro', value: 9 },
+  { label: 'Outubro', value: 10 },
+  { label: 'Novembro', value: 11 },
+  { label: 'Dezembro', value: 12 }
+];
+
+// Computed Categories Options
+const categoriesOptions = computed(() => {
+  return (categoryStore.categories || []).map((c) => ({
+    label: c.name,
+    value: c.id
+  }));
 });
+
+// Computed Available Years
+const yearsOptions = computed(() => {
+  const plans = consumptionPlanStore.consumptionPlans || [];
+  const yearsSet = new Set(plans.map((p) => Number(p.year)).filter((y) => !isNaN(y) && y > 0));
+  
+  const currentYear = new Date().getFullYear();
+  yearsSet.add(currentYear);
+
+  return Array.from(yearsSet)
+    .sort((a, b) => b - a)
+    .map((y) => ({ label: String(y), value: y }));
+});
+
+// Advanced Computed Filtering (Client-side)
+const filteredPlans = computed(() => {
+  let list = consumptionPlanStore.consumptionPlans || [];
+
+  if (searchQuery.value && searchQuery.value.trim() !== '') {
+    const q = searchQuery.value.trim().toLowerCase();
+    list = list.filter((plan) => {
+      const planId = String(plan.id || '');
+      const amount = String(plan.amount || '');
+      const year = String(plan.year || '');
+      const categoryName = getCategoryName(plan.categoryId, plan).toLowerCase();
+      const monthName = getMonthName(plan.month).toLowerCase();
+
+      return (
+        planId.includes(q) ||
+        amount.includes(q) ||
+        year.includes(q) ||
+        categoryName.includes(q) ||
+        monthName.includes(q)
+      );
+    });
+  }
+
+  if (selectedCategoryFilter.value !== null) {
+    list = list.filter((plan) => Number(plan.categoryId) === Number(selectedCategoryFilter.value));
+  }
+
+  if (selectedMonthFilter.value !== null) {
+    list = list.filter((plan) => Number(plan.month) === Number(selectedMonthFilter.value));
+  }
+
+  if (selectedYearFilter.value !== null) {
+    list = list.filter((plan) => Number(plan.year) === Number(selectedYearFilter.value));
+  }
+
+  return list;
+});
+
+const activeFiltersCount = computed(() => {
+  let count = 0;
+  if (searchQuery.value && searchQuery.value.trim() !== '') count++;
+  if (selectedCategoryFilter.value !== null) count++;
+  if (selectedMonthFilter.value !== null) count++;
+  if (selectedYearFilter.value !== null) count++;
+  return count;
+});
+
+const totalPlannedAmount = computed(() => {
+  return filteredPlans.value.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+});
+
+function clearAllFilters() {
+  searchQuery.value = '';
+  selectedCategoryFilter.value = null;
+  selectedMonthFilter.value = null;
+  selectedYearFilter.value = null;
+}
 
 function clearFieldError(field) {
   if (fieldErrors.value[field]) {
-    fieldErrors.value[field] = '';
+    delete fieldErrors.value[field];
   }
 }
 
@@ -1013,47 +487,73 @@ function getErrorMessage(errorField) {
   return Array.isArray(errorField) ? errorField[0] : errorField;
 }
 
+function resetForm() {
+  form.amount = null;
+  form.month = null;
+  form.year = new Date().getFullYear();
+  form.categoryId = null;
+  fieldErrors.value = {};
+}
+
 function openCreateDialog() {
   isEditing.value = false;
   editingId.value = null;
-  form.name = '';
+  resetForm();
+  isDialogVisible.value = true;
+}
+
+function openEditDialog(plan) {
+  isEditing.value = true;
+  editingId.value = plan.id;
+  form.amount = plan.amount !== null && plan.amount !== undefined ? Number(plan.amount) : null;
+  form.month = plan.month ? Number(plan.month) : null;
+  form.year = plan.year ? Number(plan.year) : new Date().getFullYear();
+  form.categoryId = plan.categoryId ? Number(plan.categoryId) : null;
   fieldErrors.value = {};
   isDialogVisible.value = true;
 }
 
-function openEditDialog(category) {
-  isEditing.value = true;
-  editingId.value = category.id;
-  form.name = category.name;
-  fieldErrors.value = {};
-  isDialogVisible.value = true;
+function validateForm() {
+  const errors = {};
+  if (!form.categoryId) errors.categoryId = 'Selecione uma categoria.';
+  if (!form.month) errors.month = 'Selecione um mês.';
+  if (!form.year || form.year < 2000 || form.year > 2100) errors.year = 'Informe um ano válido.';
+  if (form.amount === null || form.amount === undefined || isNaN(form.amount) || form.amount <= 0) {
+    errors.amount = 'Informe um montante válido maior que 0.';
+  }
+
+  fieldErrors.value = errors;
+  return Object.keys(errors).length === 0;
 }
 
 async function handleSave() {
-  if (categoryStore.isLoading) return;
+  if (consumptionPlanStore.isLoading) return;
 
-  fieldErrors.value = {};
+  if (!validateForm()) return;
 
   try {
     const payload = {
-      name: form.name.trim()
+      amount: Number(form.amount),
+      month: Number(form.month),
+      year: Number(form.year),
+      categoryId: Number(form.categoryId)
     };
 
     if (isEditing.value) {
-      await categoryStore.update(editingId.value, payload);
+      await consumptionPlanStore.update(editingId.value, payload);
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
-        detail: 'Categoria atualizada com sucesso.',
-        life: 3000
+        detail: 'Plano de consumo actualizado com sucesso.',
+        life: 3500
       });
     } else {
-      await categoryStore.create(payload);
+      await consumptionPlanStore.create(payload);
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
-        detail: 'Categoria criada com sucesso.',
-        life: 3000
+        detail: 'Plano de consumo criado com sucesso.',
+        life: 3500
       });
     }
 
@@ -1067,16 +567,19 @@ async function handleSave() {
 
     toast.add({
       severity: 'error',
-      summary: 'Erro',
-      detail: responseData?.message || 'Por favor, verifique os campos destacados.',
-      life: 4000
+      summary: 'Erro na Operação',
+      detail: responseData?.message || 'Por favor, verifique os campos destacados e tente novamente.',
+      life: 5000
     });
   }
 }
 
-function confirmDelete(category) {
+function confirmDelete(plan) {
+  const categoryName = getCategoryName(plan.categoryId, plan);
+  const period = `${getMonthName(plan.month)} / ${plan.year}`;
+
   confirm.require({
-    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta ação não pode ser desfeita.`,
+    message: `Tem a certeza que deseja eliminar o plano de consumo da categoria "${categoryName}" referente a ${period}? Esta acção é irreversível.`,
     header: 'Confirmar Eliminação',
     icon: 'pi pi-exclamation-triangle',
     rejectClass: 'p-button-secondary p-button-outlined',
@@ -1085,155 +588,308 @@ function confirmDelete(category) {
     rejectLabel: 'Cancelar',
     accept: async () => {
       try {
-        await categoryStore.remove(category.id);
+        await consumptionPlanStore.remove(plan.id);
         toast.add({
           severity: 'success',
           summary: 'Sucesso',
-          detail: 'Registo apagado com sucesso.',
-          life: 3000
+          detail: 'Plano de consumo eliminado com sucesso.',
+          life: 3500
         });
       } catch (error) {
         const responseData = error?.response?.data;
         toast.add({
           severity: 'error',
-          summary: 'Erro',
-          detail: responseData?.message || 'Não foi possível eliminar a categoria.',
-          life: 4000
+          summary: 'Erro ao Eliminar',
+          detail: responseData?.message || 'Não foi possível eliminar o plano de consumo.',
+          life: 5000
         });
       }
     }
   });
 }
 
-async function reloadCategories() {
+async function reloadData() {
   try {
-    await categoryStore.list();
+    await Promise.all([
+      consumptionPlanStore.list(),
+      categoryStore.list()
+    ]);
   } catch (error) {
     toast.add({
       severity: 'error',
-      summary: 'Erro',
-      detail: 'Não foi possível carregar as categorias.',
-      life: 4000
+      summary: 'Erro de Carregamento',
+      detail: 'Não foi possível carregar os dados dos planos.',
+      life: 5000
     });
   }
 }
 
+function formatCurrency(value) {
+  if (value === null || value === undefined || isNaN(Number(value))) return '0,00 Kz';
+  return new Intl.NumberFormat('pt-AO', {
+    style: 'currency',
+    currency: 'AOA',
+    minimumFractionDigits: 2
+  }).format(Number(value));
+}
+
+function getMonthName(monthNumber) {
+  const found = monthsOptions.find((m) => m.value === Number(monthNumber));
+  return found ? found.label : String(monthNumber || '');
+}
+
+function getCategoryName(categoryId, rowData) {
+  if (rowData?.category?.name) return rowData.category.name;
+  const list = categoryStore.categories || [];
+  const cat = list.find((c) => Number(c.id) === Number(categoryId));
+  return cat ? cat.name : `Categoria #${categoryId}`;
+}
+
 onMounted(async () => {
-  await reloadCategories();
+  await reloadData();
 });
 </script>
 
 <template>
   <Toast position="top-right" />
-  <ConfirmDialog />
 
-  <section class="category-page">
+  <ConfirmDialog class="theme-adapted-dialog" append-to="self" />
+
+  <section class="consumption-plan-page category-page">
     <!-- Cabeçalho da Página -->
     <header class="page-heading">
       <div class="heading-content">
         <div class="title-with-badge">
-          <h1>Categorias</h1>
-          <Tag 
-            v-if="categoryStore.categories" 
-            :value="categoryStore.categories.length" 
-            severity="info" 
+          <h1>Planos de Consumo</h1>
+          <Tag
+            v-if="consumptionPlanStore.consumptionPlans"
+            :value="consumptionPlanStore.consumptionPlans.length"
+            severity="info"
             class="count-badge"
-            aria-label="Total de categorias"
+            aria-label="Total de planos de consumo"
           />
         </div>
-        <p>Organize e gira os tipos de consumo e despesas do sistema.</p>
+        <p>Planeie e monitorize a previsão de despesas e orçamentos do seu perfil.</p>
       </div>
       <div class="heading-actions">
-        <Button 
-          label="Nova categoria" 
-          icon="pi pi-plus" 
+        <Button
+          label="Novo plano"
+          icon="pi pi-plus"
           class="p-button-primary btn-add"
-          :disabled="categoryStore.isLoading"
-          @click="openCreateDialog" 
+          :disabled="consumptionPlanStore.isLoading"
+          @click="openCreateDialog"
         />
       </div>
     </header>
 
+    <!-- Resumo Orçamental (KPI Summary Grid) -->
+    <div class="kpi-summary-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon bg-primary-soft">
+          <i class="pi pi-wallet"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Total Planeado (Filtrado)</span>
+          <span class="kpi-value text-green-value">{{ formatCurrency(totalPlannedAmount) }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon bg-info-soft">
+          <i class="pi pi-list"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Planos Exibidos</span>
+          <span class="kpi-value">{{ filteredPlans.length }} / {{ consumptionPlanStore.consumptionPlans?.length || 0 }}</span>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon bg-warning-soft">
+          <i class="pi pi-filter"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-label">Filtros Activos</span>
+          <span class="kpi-value">
+            {{ activeFiltersCount > 0 ? `${activeFiltersCount} aplicado(s)` : 'Nenhum' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- Card da Tabela e Conteúdo -->
     <Card class="table-card border-none shadow-1">
       <template #content>
-        <DataTable 
-          :value="categoryStore.categories" 
-          :loading="categoryStore.isLoading"
-          :globalFilterFields="['name', 'id']"
-          :filters="{ global: { value: searchQuery, matchMode: 'contains' } }"
+        <DataTable
+          :value="filteredPlans"
+          :loading="consumptionPlanStore.isLoading"
           responsiveLayout="scroll"
           paginator
           v-model:rows="rowsPerPage"
           :rowsPerPageOptions="[5, 10, 20, 50]"
           paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-          currentPageReportTemplate="A mostrar {first} até {last} de {totalRecords} categorias"
-          emptyMessage="Nenhuma categoria encontrada."
+          currentPageReportTemplate="A mostrar {first} até {last} de {totalRecords} planos"
           class="custom-datatable p-datatable-sm"
           dataKey="id"
         >
+          <!-- Cabeçalho Integrado -->
           <template #header>
-            <div class="table-header">
-              <div class="search-container">
-                <i class="pi pi-search search-icon" aria-hidden="true" />
-                <InputText 
-                  v-model="searchQuery" 
-                  placeholder="Pesquisar por ID ou nome..." 
-                  class="search-input"
-                  aria-label="Pesquisar categorias"
-                />
-                <Button 
-                  v-if="searchQuery" 
-                  icon="pi pi-times" 
-                  class="p-button-text p-button-rounded clear-search-btn" 
-                  aria-label="Limpar pesquisa"
-                  @click="searchQuery = ''"
-                />
+            <div class="table-header-wrapper table-header">
+              <div class="filter-top-row">
+                <div class="search-container">
+                  <i class="pi pi-search search-icon" aria-hidden="true" />
+                  <InputText
+                    v-model="searchQuery"
+                    placeholder="Pesquisar por ID, categoria, mês, ano ou montante..."
+                    class="search-input theme-input"
+                    aria-label="Pesquisar planos de consumo"
+                  />
+                  <Button
+                    v-if="searchQuery"
+                    icon="pi pi-times"
+                    class="p-button-text p-button-rounded clear-search-btn"
+                    aria-label="Limpar pesquisa"
+                    @click="searchQuery = ''"
+                  />
+                </div>
+
+                <div class="toolbar-actions">
+                  <Button
+                    class="p-button-outlined p-button-secondary filter-toggle-btn sm:hidden"
+                    :class="{ 'filter-active': activeFiltersCount > 0 }"
+                    @click="isFilterExpandedOnMobile = !isFilterExpandedOnMobile"
+                  >
+                    <i class="pi pi-filter"></i>
+                    <span>Filtros</span>
+                    <Badge v-if="activeFiltersCount > 0" :value="activeFiltersCount" severity="info" />
+                  </Button>
+
+                  <Button
+                    icon="pi pi-refresh"
+                    class="p-button-text p-button-secondary p-button-rounded refresh-btn"
+                    v-tooltip.top="'Actualizar lista'"
+                    aria-label="Actualizar lista de planos de consumo"
+                    :loading="consumptionPlanStore.isLoading"
+                    @click="reloadData"
+                  />
+                </div>
               </div>
-              <Button 
-                icon="pi pi-refresh" 
-                class="p-button-text p-button-secondary p-button-rounded refresh-btn" 
-                v-tooltip.top="'Atualizar lista'"
-                aria-label="Atualizar lista de categorias"
-                :loading="categoryStore.isLoading"
-                @click="reloadCategories"
-              />
+
+              <!-- Filtros Selectores -->
+              <div class="filter-selectors-grid" :class="{ 'mobile-hidden': !isFilterExpandedOnMobile }">
+                <div class="filter-item">
+                  <label class="filter-label font-medium text-xs">Categoria</label>
+                  <Dropdown
+                    v-model="selectedCategoryFilter"
+                    :options="categoriesOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todas as categorias"
+                    showClear
+                    filter
+                    class="search-input-field theme-input"
+                    panelClass="theme-dropdown-panel"
+                  />
+                </div>
+
+                <div class="filter-item">
+                  <label class="filter-label font-medium text-xs">Mês</label>
+                  <Dropdown
+                    v-model="selectedMonthFilter"
+                    :options="monthsOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todos os meses"
+                    showClear
+                    class="search-input-field theme-input"
+                    panelClass="theme-dropdown-panel"
+                  />
+                </div>
+
+                <div class="filter-item">
+                  <label class="filter-label font-medium text-xs">Ano</label>
+                  <Dropdown
+                    v-model="selectedYearFilter"
+                    :options="yearsOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Todos os anos"
+                    showClear
+                    class="search-input-field theme-input"
+                    panelClass="theme-dropdown-panel"
+                  />
+                </div>
+
+                <div class="filter-item filter-action-item">
+                  <Button
+                    v-if="activeFiltersCount > 0"
+                    label="Limpar Filtros"
+                    icon="pi pi-filter-slash"
+                    class="p-button-text p-button-danger p-button-sm btn-clear-filters"
+                    @click="clearAllFilters"
+                  />
+                </div>
+              </div>
+
+              <!-- Chips de Filtros Activos -->
+              <div v-if="activeFiltersCount > 0" class="active-chips-bar">
+                <span class="chips-title">Filtros aplicados:</span>
+                <Tag v-if="searchQuery" severity="info" class="filter-chip">
+                  <span>Pesquisa: "{{ searchQuery }}"</span>
+                  <i class="pi pi-times chip-remove" @click="searchQuery = ''"></i>
+                </Tag>
+                <Tag v-if="selectedCategoryFilter !== null" severity="info" class="filter-chip">
+                  <span>Cat: {{ getCategoryName(selectedCategoryFilter) }}</span>
+                  <i class="pi pi-times chip-remove" @click="selectedCategoryFilter = null"></i>
+                </Tag>
+                <Tag v-if="selectedMonthFilter !== null" severity="info" class="filter-chip">
+                  <span>Mês: {{ getMonthName(selectedMonthFilter) }}</span>
+                  <i class="pi pi-times chip-remove" @click="selectedMonthFilter = null"></i>
+                </Tag>
+                <Tag v-if="selectedYearFilter !== null" severity="info" class="filter-chip">
+                  <span>Ano: {{ selectedYearFilter }}</span>
+                  <i class="pi pi-times chip-remove" @click="selectedYearFilter = null"></i>
+                </Tag>
+              </div>
             </div>
           </template>
 
           <template #loading>
             <div class="table-loading-state">
-              <i class="pi pi-spin pi-spinner text-2xl text-primary mb-2"></i>
-              <span>A carregar categorias...</span>
+              <ProgressSpinner style="width: 40px; height: 40px" strokeWidth="4" />
+              <span>A carregar planos de consumo...</span>
             </div>
           </template>
 
           <template #empty>
             <div class="empty-state">
               <div class="empty-icon-wrapper">
-                <i class="pi pi-folder-open"></i>
+                <i :class="activeFiltersCount > 0 ? 'pi pi-filter-slash' : 'pi pi-folder-open'"></i>
               </div>
-              <p class="empty-title">Nenhuma categoria encontrada</p>
-              <p class="empty-subtitle" v-if="searchQuery">
-                Nenhum resultado corresponde à pesquisa "<strong>{{ searchQuery }}</strong>".
-              </p>
-              <p class="empty-subtitle" v-else>
-                Comece por adicionar a primeira categoria ao sistema.
-              </p>
-              <Button 
-                v-if="!searchQuery"
-                label="Criar Categoria" 
-                icon="pi pi-plus" 
-                class="p-button-outlined p-button-sm mt-3"
-                @click="openCreateDialog" 
-              />
-              <Button 
-                v-else
-                label="Limpar Pesquisa" 
-                icon="pi pi-filter-slash" 
-                class="p-button-text p-button-sm mt-3"
-                @click="searchQuery = ''" 
-              />
+
+              <template v-if="activeFiltersCount > 0">
+                <p class="empty-title">Nenhum resultado encontrado</p>
+                <p class="empty-subtitle">
+                  Não encontramos nenhum plano de consumo correspondente aos filtros seleccionados.
+                </p>
+                <Button
+                  label="Limpar Filtros"
+                  icon="pi pi-filter-slash"
+                  class="p-button-outlined p-button-sm mt-3"
+                  @click="clearAllFilters"
+                />
+              </template>
+
+              <template v-else>
+                <p class="empty-title">Ainda não existem planos de consumo</p>
+                <p class="empty-subtitle">
+                  Comece por planear os seus orçamentos mensais adicionando o seu primeiro registo.
+                </p>
+                <Button
+                  label="Criar Novo Plano"
+                  icon="pi pi-plus"
+                  class="p-button-primary p-button-sm mt-3"
+                  @click="openCreateDialog"
+                />
+              </template>
             </div>
           </template>
 
@@ -1243,27 +899,47 @@ onMounted(async () => {
             </template>
           </Column>
 
-          <Column field="name" header="Categoria" sortable>
+          <Column field="categoryId" header="Categoria" sortable>
             <template #body="{ data }">
-              <span class="category-name-cell">{{ data.name }}</span>
+              <span class="category-name-cell">{{ getCategoryName(data.categoryId, data) }}</span>
             </template>
           </Column>
 
-          <Column header="Ações" style="width: 140px; text-align: center">
+          <Column field="month" header="Mês" sortable style="width: 140px">
+            <template #body="{ data }">
+              {{ getMonthName(data.month) }}
+            </template>
+          </Column>
+
+          <Column field="year" header="Ano" sortable style="width: 110px">
+            <template #body="{ data }">
+              {{ data.year }}
+            </template>
+          </Column>
+
+          <Column field="amount" header="Montante Planeado" sortable>
+            <template #body="{ data }">
+              <span class="font-semibold text-green-value">
+                {{ formatCurrency(data.amount) }}
+              </span>
+            </template>
+          </Column>
+
+          <Column header="Acções" style="width: 140px; text-align: center">
             <template #body="{ data }">
               <div class="action-buttons">
-                <Button 
-                  icon="pi pi-pencil" 
+                <Button
+                  icon="pi pi-pencil"
                   class="p-button-text p-button-rounded p-button-warning action-btn"
                   v-tooltip.top="'Editar'"
-                  aria-label="Editar Categoria"
+                  aria-label="Editar Plano de Consumo"
                   @click="openEditDialog(data)"
                 />
-                <Button 
-                  icon="pi pi-trash" 
+                <Button
+                  icon="pi pi-trash"
                   class="p-button-text p-button-rounded p-button-danger action-btn"
                   v-tooltip.top="'Eliminar'"
-                  aria-label="Eliminar Categoria"
+                  aria-label="Eliminar Plano de Consumo"
                   @click="confirmDelete(data)"
                 />
               </div>
@@ -1274,55 +950,155 @@ onMounted(async () => {
     </Card>
 
     <!-- Dialog de Criação / Edição -->
-    <Dialog 
-      v-model:visible="isDialogVisible" 
-      :header="isEditing ? 'Editar Categoria' : 'Nova Categoria'" 
+    <Dialog
+      v-model:visible="isDialogVisible"
+      :header="isEditing ? 'Editar Plano de Consumo' : 'Novo Plano de Consumo'"
       :modal="true"
-      :dismissableMask="!categoryStore.isLoading"
-      :closable="!categoryStore.isLoading"
-      class="category-dialog"
-      style="width: 100%; max-width: 460px"
+      :dismissableMask="!consumptionPlanStore.isLoading"
+      :closable="!consumptionPlanStore.isLoading"
+      append-to="self"
+      class="consumption-plan-dialog theme-adapted-dialog"
+      style="width: 100%; max-width: 500px"
     >
       <form @submit.prevent="handleSave" class="form-grid" novalidate>
+        <!-- Categoria -->
         <div class="field">
-          <label for="category-name" class="required-label font-medium text-sm">Nome da Categoria</label>
-          <div class="input-wrapper">
-            <InputText 
-              id="category-name" 
-              v-model="form.name" 
-              placeholder="Ex: Alimentação, Transporte, Saúde" 
-              class="w-full search-input-field"
-              :class="{ 'p-invalid': !!fieldErrors.name }"
-              :invalid="!!fieldErrors.name"
-              :aria-invalid="!!fieldErrors.name"
-              aria-describedby="category-name-error"
-              :disabled="categoryStore.isLoading"
-              @input="clearFieldError('name')"
-              required
-              autofocus
-            />
-          </div>
-          <small id="category-name-error" v-if="fieldErrors.name" class="p-error-message" role="alert">
+          <label for="plan-category" class="required-label font-medium text-sm">Categoria</label>
+          <Dropdown
+            id="plan-category"
+            v-model="form.categoryId"
+            :options="categoriesOptions"
+            optionLabel="label"
+            optionValue="value"
+            filter
+            showClear
+            placeholder="Selecione uma categoria"
+            class="w-full search-input-field theme-input"
+            panelClass="theme-dropdown-panel"
+            :class="{ 'p-invalid': !!fieldErrors.categoryId }"
+            :invalid="!!fieldErrors.categoryId"
+            :disabled="consumptionPlanStore.isLoading"
+            aria-describedby="plan-category-error"
+            @change="clearFieldError('categoryId')"
+            @update:modelValue="clearFieldError('categoryId')"
+          />
+          <small
+            id="plan-category-error"
+            v-if="fieldErrors.categoryId"
+            class="p-error-message"
+            role="alert"
+          >
             <i class="pi pi-exclamation-circle"></i>
-            <span>{{ getErrorMessage(fieldErrors.name) }}</span>
+            <span>{{ getErrorMessage(fieldErrors.categoryId) }}</span>
           </small>
         </div>
 
-        <div class="dialog-footer">
-          <Button 
-            type="button" 
-            label="Cancelar" 
-            class="p-button-text p-button-secondary" 
-            :disabled="categoryStore.isLoading"
-            @click="isDialogVisible = false" 
+        <!-- Mês + Ano -->
+        <div class="w-full flex flex-col sm:flex-row gap-4">
+          <div class="w-full sm:w-1/2 field">
+            <label for="plan-month" class="required-label font-medium text-sm">Mês</label>
+            <Dropdown
+              id="plan-month"
+              v-model="form.month"
+              :options="monthsOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Mês"
+              class="w-full search-input-field theme-input"
+              panelClass="theme-dropdown-panel"
+              :class="{ 'p-invalid': !!fieldErrors.month }"
+              :invalid="!!fieldErrors.month"
+              :disabled="consumptionPlanStore.isLoading"
+              aria-describedby="plan-month-error"
+              @change="clearFieldError('month')"
+              @update:modelValue="clearFieldError('month')"
+            />
+            <small
+              id="plan-month-error"
+              v-if="fieldErrors.month"
+              class="p-error-message"
+              role="alert"
+            >
+              <i class="pi pi-exclamation-circle"></i>
+              <span>{{ getErrorMessage(fieldErrors.month) }}</span>
+            </small>
+          </div>
+
+          <div class="w-full sm:w-1/2 field">
+            <label for="plan-year" class="required-label font-medium text-sm">Ano</label>
+            <InputNumber
+              id="plan-year"
+              v-model="form.year"
+              :useGrouping="false"
+              :min="2000"
+              :max="2100"
+              placeholder="Ex: 2026"
+              class="w-full search-input-field theme-input"
+              inputClass="theme-input-element w-full"
+              :class="{ 'p-invalid': !!fieldErrors.year }"
+              :invalid="!!fieldErrors.year"
+              :disabled="consumptionPlanStore.isLoading"
+              aria-describedby="plan-year-error"
+              @update:modelValue="clearFieldError('year')"
+            />
+            <small
+              id="plan-year-error"
+              v-if="fieldErrors.year"
+              class="p-error-message"
+              role="alert"
+            >
+              <i class="pi pi-exclamation-circle"></i>
+              <span>{{ getErrorMessage(fieldErrors.year) }}</span>
+            </small>
+          </div>
+        </div>
+
+        <!-- Montante -->
+        <div class="field">
+          <label for="plan-amount" class="required-label font-medium text-sm">Montante Planeado (Kz)</label>
+          <InputNumber
+            id="plan-amount"
+            v-model="form.amount"
+            mode="currency"
+            currency="AOA"
+            locale="pt-AO"
+            :minFractionDigits="2"
+            :maxFractionDigits="2"
+            placeholder="0,00"
+            class="w-full search-input-field theme-input"
+            inputClass="theme-input-element w-full"
+            :class="{ 'p-invalid': !!fieldErrors.amount }"
+            :invalid="!!fieldErrors.amount"
+            :disabled="consumptionPlanStore.isLoading"
+            aria-describedby="plan-amount-error"
+            @update:modelValue="clearFieldError('amount')"
           />
-          <Button 
-            type="submit" 
-            :label="isEditing ? 'Atualizar' : 'Guardar'" 
-            :icon="categoryStore.isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'" 
-            class="p-button-primary" 
-            :loading="categoryStore.isLoading"
-            :disabled="categoryStore.isLoading || !form.name.trim()"
+          <small
+            id="plan-amount-error"
+            v-if="fieldErrors.amount"
+            class="p-error-message"
+            role="alert"
+          >
+            <i class="pi pi-exclamation-circle"></i>
+            <span>{{ getErrorMessage(fieldErrors.amount) }}</span>
+          </small>
+        </div>
+
+        <!-- Rodapé do Dialog -->
+        <div class="dialog-footer">
+          <Button
+            type="button"
+            label="Cancelar"
+            class="p-button-text p-button-secondary"
+            :disabled="consumptionPlanStore.isLoading"
+            @click="isDialogVisible = false"
+          />
+          <Button
+            type="submit"
+            :label="isEditing ? 'Actualizar' : 'Guardar'"
+            :icon="consumptionPlanStore.isLoading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+            class="p-button-primary"
+            :loading="consumptionPlanStore.isLoading"
           />
         </div>
       </form>
@@ -1331,699 +1107,26 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* Transições Globais e Animação de Entrada */
-.category-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  animation: fadeIn 200ms ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Cabeçalho da Página */
-.page-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  padding-bottom: 0.25rem;
-}
-
-.heading-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.title-with-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.page-heading h1 {
-  font-size: 1.625rem;
-  font-weight: 700;
-  margin: 0;
-  letter-spacing: -0.02em;
-  color: var(--text-color, #1f2937);
-}
-
-.count-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 12px;
-  padding: 0.15rem 0.6rem;
-}
-
-.page-heading p {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--text-color-secondary, #6b7280);
-}
-
-.btn-add {
-  font-weight: 600;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.btn-add:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.btn-add:not(:disabled):active {
-  transform: translateY(0);
-}
-
-/* Estilo do Card Container */
-.table-card {
-  border-radius: 12px;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--surface-border, rgba(229, 231, 235, 0.8));
-  overflow: hidden;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-}
-
-:deep(.p-card-body) {
-  padding: 0;
-}
-
-:deep(.p-card-content) {
-  padding: 0;
-}
-
-/* Tabela e Cabeçalhos */
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  background: var(--surface-section, #fafafa);
-}
-
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 340px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.875rem;
-  color: var(--text-color-secondary, #9ca3af);
-  pointer-events: none;
-  font-size: 0.9rem;
-  z-index: 1;
-}
-
-.search-input {
-  width: 100%;
-  padding-left: 2.5rem;
-  padding-right: 2.25rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  transition: all 150ms ease;
-  background: var(--surface-overlay, #ffffff);
-}
-
-.search-input:focus {
-  box-shadow: 0 0 0 3px var(--primary-color-focus, rgba(59, 130, 246, 0.15));
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 0.25rem;
-  width: 1.75rem !important;
-  height: 1.75rem !important;
-  padding: 0 !important;
-  color: var(--text-color-secondary, #9ca3af);
-}
-
-.refresh-btn {
-  width: 2.25rem !important;
-  height: 2.25rem !important;
-  transition: transform 200ms ease;
-}
-
-.refresh-btn:hover {
-  transform: rotate(45deg);
-}
-
-/* Ajustes nas Linhas e Células */
-.custom-datatable :deep(.p-datatable-thead > tr > th) {
-  background: var(--surface-section, #fafafa);
-  color: var(--text-color-secondary, #4b5563);
-  font-weight: 600;
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #e5e7eb);
-}
-
-.custom-datatable :deep(.p-datatable-tbody > tr) {
-  transition: background-color 150ms ease;
-}
-
-.custom-datatable :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  vertical-align: middle;
-}
-
-.custom-datatable :deep(.p-datatable-tbody > tr:hover) {
-  background-color: var(--surface-hover, rgba(0, 0, 0, 0.015));
-}
-
-.id-badge {
-  font-family: var(--font-family-monospace, monospace);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-color-secondary, #6b7280);
-  background: var(--surface-ground, #f3f4f6);
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-}
-
-.category-name-cell {
-  font-weight: 500;
-  color: var(--text-color, #111827);
-  font-size: 0.9375rem;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 0.25rem;
-}
-
-.action-btn {
-  width: 2rem !important;
-  height: 2rem !important;
-  transition: transform 150ms ease, background-color 150ms ease;
-}
-
-.action-btn:hover {
-  transform: scale(1.1);
-}
-
-/* Empty State e Loading State */
-.table-loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  color: var(--text-color-secondary, #6b7280);
-  font-size: 0.875rem;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3.5rem 1.5rem;
-  text-align: center;
-}
-
-.empty-icon-wrapper {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: var(--surface-ground, #f3f4f6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.empty-icon-wrapper i {
-  font-size: 1.5rem;
-  color: var(--text-color-secondary, #9ca3af);
-}
-
-.empty-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
-  color: var(--text-color, #374151);
-}
-
-.empty-subtitle {
-  font-size: 0.875rem;
-  margin: 0;
-  color: var(--text-color-secondary, #6b7280);
-  max-width: 360px;
-}
-
-/* Dialog */
-.category-dialog :deep(.p-dialog-header) {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  font-weight: 600;
-}
-
-.category-dialog :deep(.p-dialog-content) {
-  padding: 1.5rem;
-}
-
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.required-label::after {
-  content: ' *';
-  color: var(--red-500, #ef4444);
-}
-
-.input-wrapper {
-  position: relative;
-}
-
-.p-error-message {
-  color: var(--red-500, #ef4444);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
-  margin-top: 0.15rem;
-  animation: fadeIn 150ms ease;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--surface-border, #f3f4f6);
-}
-
-.w-full {
-  width: 100%;
-}
-
-/* Responsividade */
-@media (max-width: 640px) {
-  .page-heading {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .heading-actions {
-    width: 100%;
-  }
-
-  .btn-add {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .table-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-container {
-    max-width: 100%;
-  }
-
-  .custom-datatable :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.75rem 0.875rem;
-  }
-}
+  @import '../assets/crud.css';
+  @import '../assets/mobile.css';
 </style>
+```
 
-</model>
+---
 
-<style scoped>
-/* Transições Globais e Animação de Entrada */
-.category-page {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  animation: fadeIn 200ms ease-in-out;
-}
+## MIGRATION DO NOVO MÓDULO
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+```php
+[COLE AQUI A MIGRATION]
+```
 
-/* Cabeçalho da Página */
-.page-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  padding-bottom: 0.25rem;
-}
+### Resultado obrigatório
 
-.heading-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
+Gere exactamente:
 
-.title-with-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
+* `NOME.repository.ts`
+* `NOME.routes.ts`
+* `NOME.store.ts`
+* `NOME.vue`
 
-.page-heading h1 {
-  font-size: 1.625rem;
-  font-weight: 700;
-  margin: 0;
-  letter-spacing: -0.02em;
-  color: var(--text-color, #1f2937);
-}
-
-.count-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  border-radius: 12px;
-  padding: 0.15rem 0.6rem;
-}
-
-.page-heading p {
-  margin: 0;
-  font-size: 0.9375rem;
-  color: var(--text-color-secondary, #6b7280);
-}
-
-.btn-add {
-  font-weight: 600;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-.btn-add:not(:disabled):hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-}
-
-.btn-add:not(:disabled):active {
-  transform: translateY(0);
-}
-
-/* Estilo do Card Container */
-.table-card {
-  border-radius: 12px;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--surface-border, rgba(229, 231, 235, 0.8));
-  overflow: hidden;
-  transition: border-color 200ms ease, box-shadow 200ms ease;
-}
-
-:deep(.p-card-body) {
-  padding: 0;
-}
-
-:deep(.p-card-content) {
-  padding: 0;
-}
-
-/* Tabela e Cabeçalhos */
-.table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  background: var(--surface-section, #fafafa);
-}
-
-.search-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-  max-width: 340px;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.875rem;
-  color: var(--text-color-secondary, #9ca3af);
-  pointer-events: none;
-  font-size: 0.9rem;
-  z-index: 1;
-}
-
-.search-input {
-  width: 100%;
-  padding-left: 2.5rem;
-  padding-right: 2.25rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  transition: all 150ms ease;
-  background: var(--surface-overlay, #ffffff);
-}
-
-.search-input:focus {
-  box-shadow: 0 0 0 3px var(--primary-color-focus, rgba(59, 130, 246, 0.15));
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 0.25rem;
-  width: 1.75rem !important;
-  height: 1.75rem !important;
-  padding: 0 !important;
-  color: var(--text-color-secondary, #9ca3af);
-}
-
-.refresh-btn {
-  width: 2.25rem !important;
-  height: 2.25rem !important;
-  transition: transform 200ms ease;
-}
-
-.refresh-btn:hover {
-  transform: rotate(45deg);
-}
-
-/* Ajustes nas Linhas e Células */
-.custom-datatable :deep(.p-datatable-thead > tr > th) {
-  background: var(--surface-section, #fafafa);
-  color: var(--text-color-secondary, #4b5563);
-  font-weight: 600;
-  font-size: 0.8125rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #e5e7eb);
-}
-
-.custom-datatable :deep(.p-datatable-tbody > tr) {
-  transition: background-color 150ms ease;
-}
-
-.custom-datatable :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.875rem 1.25rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  vertical-align: middle;
-}
-
-.custom-datatable :deep(.p-datatable-tbody > tr:hover) {
-  background-color: var(--surface-hover, rgba(0, 0, 0, 0.015));
-}
-
-.id-badge {
-  font-family: var(--font-family-monospace, monospace);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-color-secondary, #6b7280);
-  background: var(--surface-ground, #f3f4f6);
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-}
-
-.category-name-cell {
-  font-weight: 500;
-  color: var(--text-color, #111827);
-  font-size: 0.9375rem;
-}
-
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 0.25rem;
-}
-
-.action-btn {
-  width: 2rem !important;
-  height: 2rem !important;
-  transition: transform 150ms ease, background-color 150ms ease;
-}
-
-.action-btn:hover {
-  transform: scale(1.1);
-}
-
-/* Empty State e Loading State */
-.table-loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  color: var(--text-color-secondary, #6b7280);
-  font-size: 0.875rem;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3.5rem 1.5rem;
-  text-align: center;
-}
-
-.empty-icon-wrapper {
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: 50%;
-  background: var(--surface-ground, #f3f4f6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
-.empty-icon-wrapper i {
-  font-size: 1.5rem;
-  color: var(--text-color-secondary, #9ca3af);
-}
-
-.empty-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
-  color: var(--text-color, #374151);
-}
-
-.empty-subtitle {
-  font-size: 0.875rem;
-  margin: 0;
-  color: var(--text-color-secondary, #6b7280);
-  max-width: 360px;
-}
-
-/* Dialog */
-.category-dialog :deep(.p-dialog-header) {
-  padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--surface-border, #f3f4f6);
-  font-weight: 600;
-}
-
-.category-dialog :deep(.p-dialog-content) {
-  padding: 1.5rem;
-}
-
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.required-label::after {
-  content: ' *';
-  color: var(--red-500, #ef4444);
-}
-
-.input-wrapper {
-  position: relative;
-}
-
-.p-error-message {
-  color: var(--red-500, #ef4444);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
-  margin-top: 0.15rem;
-  animation: fadeIn 150ms ease;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--surface-border, #f3f4f6);
-}
-
-.w-full {
-  width: 100%;
-}
-
-/* Responsividade */
-@media (max-width: 640px) {
-  .page-heading {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .heading-actions {
-    width: 100%;
-  }
-
-  .btn-add {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .table-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-container {
-    max-width: 100%;
-  }
-
-  .custom-datatable :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.75rem 0.875rem;
-  }
-}
-</style>
+**Não gere nenhum outro ficheiro.**
