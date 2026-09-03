@@ -13,21 +13,29 @@ model User {
   username         String            @unique @default("empty")
   password         String            @default("empty")
   consumptionPlans ConsumptionPlan[]
+  category         Category[]
 }
 
 model Category {
-  id               Int               @id @default(autoincrement())
-  name             String
+  id   Int    @id @default(autoincrement())
+  name String
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   consumptionPlans ConsumptionPlan[]
+
+  @@unique([userId, name])
+  @@map("categories")
 }
 
 model ConsumptionPlan {
-  id         Int      @id @default(autoincrement())
-  amount     Decimal  @db.Decimal(10, 2)
+  id         Int     @id @default(autoincrement())
+  amount     Decimal @db.Decimal(10, 2)
   month      Int
   year       Int
-  userId     Int      @map("user_id")
-  categoryId Int      @map("category_id")
+  userId     Int     @map("user_id")
+  categoryId Int     @map("category_id")
 
   // Relationships
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
