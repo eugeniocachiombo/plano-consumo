@@ -163,6 +163,31 @@ const categoriesSummary = computed(() => {
   });
 });
 
+// --- PAGINAÇÃO DO RESUMO POR CATEGORIA ---
+const categoryPage = ref(1);
+const categoriesPerPage = 4; // Ajuste este número conforme a altura ideal do seu Card
+
+const totalCategoryPages = computed(() => {
+  return Math.ceil(categoriesSummary.value.length / categoriesPerPage) || 1;
+});
+
+const paginatedCategoriesSummary = computed(() => {
+  const start = (categoryPage.value - 1) * categoriesPerPage;
+  return categoriesSummary.value.slice(start, start + categoriesPerPage);
+});
+
+function prevCategoryPage() {
+  if (categoryPage.value > 1) {
+    categoryPage.value--;
+  }
+}
+
+function nextCategoryPage() {
+  if (categoryPage.value < totalCategoryPages.value) {
+    categoryPage.value++;
+  }
+}
+
 // Ultimos Consumos para a Tabela
 const recentConsumptions = computed(() => {
   const list = [...(consumptionStore.consumptions || [])];
@@ -289,14 +314,41 @@ onMounted(async () => {
           </div>
         </template>
         <template #content>
-          <div v-if="categoriesSummary.length > 0" class="category-list">
-            <div v-for="category in categoriesSummary" :key="category.name" class="category-item">
-              <div class="category-top">
-                <span>{{ category.name }}</span>
-                <strong>{{ category.value.toLocaleString('pt-AO') }} Kz</strong>
+          <div v-if="categoriesSummary.length > 0" class="category-wrapper">
+            <div class="category-list">
+              <div v-for="category in paginatedCategoriesSummary" :key="category.name" class="category-item">
+                <div class="category-top">
+                  <span>{{ category.name }}</span>
+                  <strong>{{ category.value.toLocaleString('pt-AO') }} Kz</strong>
+                </div>
+                <ProgressBar :value="category.percent" :show-value="false" />
+                <small>{{ category.percent }}% do consumo</small>
               </div>
-              <ProgressBar :value="category.percent" :show-value="false" />
-              <small>{{ category.percent }}% do consumo</small>
+            </div>
+
+            <!-- Navegação da Paginação -->
+            <div v-if="totalCategoryPages > 1" class="category-pagination">
+              <small class="text-secondary">
+                Página {{ categoryPage }} de {{ totalCategoryPages }}
+              </small>
+              <div class="pagination-buttons">
+                <Button
+                  icon="pi pi-chevron-left"
+                  text
+                  rounded
+                  size="small"
+                  :disabled="categoryPage === 1"
+                  @click="prevCategoryPage"
+                />
+                <Button
+                  icon="pi pi-chevron-right"
+                  text
+                  rounded
+                  size="small"
+                  :disabled="categoryPage === totalCategoryPages"
+                  @click="nextCategoryPage"
+                />
+              </div>
             </div>
           </div>
           <div v-else class="empty-state">
@@ -462,4 +514,32 @@ onMounted(async () => {
 
 <style scoped>
 @import '../assets/dashboard.css';
+
+/* Estilos adicionados para a Paginação do Resumo de Categorias */
+.category-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 280px; /* Mantém a altura fixa do card */
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.category-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--surface-border, #e5e7eb);
+}
+
+.pagination-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
 </style>
