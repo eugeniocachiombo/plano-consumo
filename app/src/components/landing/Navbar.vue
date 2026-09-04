@@ -55,25 +55,25 @@ const goToLogin = () => {
 
       <!-- Desktop Nav Links -->
       <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-        <button @click="scrollTo('inicio')" class="hover:text-white transition-colors">Início</button>
-        <button @click="scrollTo('sobre')" class="hover:text-white transition-colors">Sobre</button>
-        <button @click="scrollTo('como-funciona')" class="hover:text-white transition-colors">Como funciona</button>
-        <button @click="scrollTo('beneficios')" class="hover:text-white transition-colors">Benefícios</button>
-        <button @click="scrollTo('funcionalidades')" class="hover:text-white transition-colors">Funcionalidades</button>
+        <button @click="scrollTo('inicio')" class="hover:text-white transition-colors hover:cursor-pointer">Início</button>
+        <button @click="scrollTo('sobre')" class="hover:text-white transition-colors hover:cursor-pointer">Sobre</button>
+        <button @click="scrollTo('como-funciona')" class="hover:text-white transition-colors hover:cursor-pointer">Como funciona</button>
+        <button @click="scrollTo('beneficios')" class="hover:text-white transition-colors hover:cursor-pointer">Benefícios</button>
+        <button @click="scrollTo('funcionalidades')" class="hover:text-white transition-colors hover:cursor-pointer">Funcionalidades</button>
       </nav>
 
       <!-- Desktop CTA & Login -->
       <div class="hidden md:flex items-center gap-4">
         <button 
           @click="goToLogin"
-          class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+          class="px-4 py-2 text-sm font-semibold text-slate-300 hover:text-white transition-colors hover:cursor-pointer"
         >
           Iniciar sessão
         </button>
 
         <button 
           @click="scrollTo('download')" 
-          class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2"
+          class="hover:cursor-pointer px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-lg shadow-blue-600/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 active:translate-y-0 flex items-center gap-2"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
