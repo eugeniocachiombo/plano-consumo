@@ -6,26 +6,23 @@ import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
-import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import ProgressSpinner from 'primevue/progressspinner';
 import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 
 const categoryStore = useCategoryStore();
-
 const toast = useToast();
-const confirm = useConfirm();
 
 const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
 
-const rowsPerPage = ref(10);
+// Controle do modal de confirmação de eliminação personalizado
+const isConfirmDeleteVisible = ref(false);
+const categoryToDelete = ref(null);
 
+const rowsPerPage = ref(10);
 const searchQuery = ref('');
 const isFilterExpandedOnMobile = ref(false);
 
@@ -108,8 +105,6 @@ function validateForm() {
 async function handleSave() {
   if (categoryStore.isLoading) return;
 
-  // if (!validateForm()) return;
-
   try {
     const payload = {
       name: form.name.trim()
@@ -117,6 +112,7 @@ async function handleSave() {
 
     if (isEditing.value) {
       await categoryStore.update(editingId.value, payload);
+      isDialogVisible.value = false;
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -125,6 +121,7 @@ async function handleSave() {
       });
     } else {
       await categoryStore.create(payload);
+      isDialogVisible.value = false;
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -133,7 +130,7 @@ async function handleSave() {
       });
     }
 
-    isDialogVisible.value = false;
+    
   } catch (error) {
     const responseData = error?.response?.data;
 
@@ -151,34 +148,32 @@ async function handleSave() {
 }
 
 function confirmDelete(category) {
-  confirm.require({
-    message: `Tem a certeza que deseja eliminar a categoria "${category.name}"? Esta acção é irreversível.`,
-    header: 'Confirmar Eliminação',
-    icon: 'pi pi-exclamation-triangle',
-    rejectClass: 'p-button-secondary p-button-outlined',
-    acceptClass: 'p-button-danger',
-    acceptLabel: 'Eliminar',
-    rejectLabel: 'Cancelar',
-    accept: async () => {
-      try {
-        await categoryStore.remove(category.id);
-        toast.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Categoria eliminada com sucesso.',
-          life: 3500
-        });
-      } catch (error) {
-        const responseData = error?.response?.data;
-        toast.add({
-          severity: 'error',
-          summary: 'Erro ao Eliminar',
-          detail: responseData?.message || 'Não foi possível eliminar a categoria.',
-          life: 5000
-        });
-      }
-    }
-  });
+  categoryToDelete.value = category;
+  isConfirmDeleteVisible.value = true;
+}
+
+async function executeDelete() {
+  if (!categoryToDelete.value || categoryStore.isLoading) return;
+
+  try {
+    await categoryStore.remove(categoryToDelete.value.id);
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Categoria eliminada com sucesso.',
+      life: 3500
+    });
+    isConfirmDeleteVisible.value = false;
+    categoryToDelete.value = null;
+  } catch (error) {
+    const responseData = error?.response?.data;
+    toast.add({
+      severity: 'error',
+      summary: 'Erro ao Eliminar',
+      detail: responseData?.message || 'Não foi possível eliminar a categoria.',
+      life: 5000
+    });
+  }
 }
 
 async function reloadData() {
@@ -200,10 +195,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Toast position="top-right" />
-
-  <ConfirmDialog class="theme-adapted-dialog" append-to="self" />
-
   <section class="category-page">
     <header class="page-heading">
       <div class="heading-content">
@@ -405,6 +396,7 @@ onMounted(async () => {
       </template>
     </Card>
 
+    <!-- Modal Form (Criar/Editar) -->
     <Dialog
       v-model:visible="isDialogVisible"
       :header="isEditing ? 'Editar Categoria' : 'Nova Categoria'"
@@ -458,6 +450,47 @@ onMounted(async () => {
           />
         </div>
       </form>
+    </Dialog>
+
+    <!-- Modal de Confirmação de Eliminação Personalizado -->
+    <Dialog
+      v-model:visible="isConfirmDeleteVisible"
+      header="Confirmar Eliminação"
+      :modal="true"
+      :dismissableMask="!categoryStore.isLoading"
+      :closable="!categoryStore.isLoading"
+      append-to="self"
+      class="theme-adapted-dialog"
+      style="width: 100%; max-width: 450px"
+    >
+      <div class="flex items-start gap-4 py-2">
+        <i class="pi pi-exclamation-triangle text-amber-500 text-3xl flex-shrink-0 mt-1"></i>
+        <div class="space-y-1" v-if="categoryToDelete">
+          <p class="text-sm leading-relaxed">
+            Tem a certeza que deseja eliminar a categoria
+            <strong>"{{ categoryToDelete.name }}"</strong>?
+          </p>
+          <p class="text-xs text-red-400 font-medium pt-1">Esta acção é irreversível.</p>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <Button
+            label="Cancelar"
+            class="p-button-text p-button-secondary"
+            :disabled="categoryStore.isLoading"
+            @click="isConfirmDeleteVisible = false"
+          />
+          <Button
+            label="Eliminar"
+            icon="pi pi-trash"
+            class="p-button-danger"
+            :loading="categoryStore.isLoading"
+            @click="executeDelete"
+          />
+        </div>
+      </template>
     </Dialog>
   </section>
 </template>

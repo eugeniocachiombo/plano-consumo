@@ -184,8 +184,6 @@ function getCategoryName(categoryId, rowData) {
 async function saveConsumption() {
   if (consumptionStore.isLoading) return;
 
-  // if (!validateForm()) return;
-
   try {
     await consumptionStore.create({
       categoryId: Number(newConsumption.categoryId),
@@ -194,7 +192,7 @@ async function saveConsumption() {
       month: currentMonth,
       year: currentYear
     });
-
+    showNew.value = false;
     toast.add({
       severity: 'success',
       summary: 'Sucesso',
@@ -203,7 +201,7 @@ async function saveConsumption() {
     });
 
     resetForm();
-    showNew.value = false;
+    
   } catch (error) {
     const responseData = error?.response?.data;
 

@@ -8,25 +8,24 @@ import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Dropdown from 'primevue/dropdown';
-import Toast from 'primevue/toast';
-import ConfirmDialog from 'primevue/confirmdialog';
-import Tag from 'primevue/tag';
 import Badge from 'primevue/badge';
 import ProgressSpinner from 'primevue/progressspinner';
 import { useConsumptionStore } from '@/stores/consumption.store';
 import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
-import { useConfirm } from 'primevue/useconfirm';
 
 const consumptionStore = useConsumptionStore();
 const categoryStore = useCategoryStore();
 
 const toast = useToast();
-const confirm = useConfirm();
 
 const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
+
+// Estado para controlo do Dialog de eliminação customizado
+const isConfirmDeleteVisible = ref(false);
+const itemToDelete = ref(null);
 
 const rowsPerPage = ref(10);
 
@@ -189,23 +188,8 @@ function openEditDialog(item) {
   isDialogVisible.value = true;
 }
 
-function validateForm() {
-  const errors = {};
-  if (!form.categoryId) errors.categoryId = 'Selecione uma categoria.';
-  if (!form.month) errors.month = 'Selecione um mês.';
-  if (!form.year) errors.year = 'Selecione um ano válido.';
-  if (form.amount === null || form.amount === undefined || isNaN(form.amount) || form.amount <= 0) {
-    errors.amount = 'Informe um montante válido maior que 0.';
-  }
-
-  fieldErrors.value = errors;
-  return Object.keys(errors).length === 0;
-}
-
 async function handleSave() {
   if (consumptionStore.isLoading) return;
-
-  // if (!validateForm()) return;
 
   try {
     const payload = {
@@ -218,6 +202,7 @@ async function handleSave() {
 
     if (isEditing.value) {
       await consumptionStore.update(editingId.value, payload);
+      isDialogVisible.value = false;
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -226,6 +211,7 @@ async function handleSave() {
       });
     } else {
       await consumptionStore.create(payload);
+      isDialogVisible.value = false;
       toast.add({
         severity: 'success',
         summary: 'Sucesso',
@@ -234,7 +220,7 @@ async function handleSave() {
       });
     }
 
-    isDialogVisible.value = false;
+    
   } catch (error) {
     const responseData = error?.response?.data;
 
@@ -252,37 +238,32 @@ async function handleSave() {
 }
 
 function confirmDelete(item) {
-  const categoryName = getCategoryName(item.categoryId, item);
-  const period = `${getMonthName(item.month)} / ${item.year}`;
+  itemToDelete.value = item;
+  isConfirmDeleteVisible.value = true;
+}
 
-  confirm.require({
-    message: `Tem a certeza que deseja eliminar o consumo da categoria "${categoryName}" referente a ${period}? Esta acção é irreversível.`,
-    header: 'Confirmar Eliminação',
-    icon: 'pi pi-exclamation-triangle',
-    rejectClass: 'p-button-secondary p-button-outlined',
-    acceptClass: 'p-button-danger',
-    acceptLabel: 'Eliminar',
-    rejectLabel: 'Cancelar',
-    accept: async () => {
-      try {
-        await consumptionStore.remove(item.id);
-        toast.add({
-          severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Consumo eliminado com sucesso.',
-          life: 3500
-        });
-      } catch (error) {
-        const responseData = error?.response?.data;
-        toast.add({
-          severity: 'error',
-          summary: 'Erro ao Eliminar',
-          detail: responseData?.message || 'Não foi possível eliminar o consumo.',
-          life: 5000
-        });
-      }
-    }
-  });
+async function executeDelete() {
+  if (!itemToDelete.value || consumptionStore.isLoading) return;
+
+  try {
+    await consumptionStore.remove(itemToDelete.value.id);
+    toast.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: 'Consumo eliminado com sucesso.',
+      life: 3500
+    });
+    isConfirmDeleteVisible.value = false;
+    itemToDelete.value = null;
+  } catch (error) {
+    const responseData = error?.response?.data;
+    toast.add({
+      severity: 'error',
+      summary: 'Erro ao Eliminar',
+      detail: responseData?.message || 'Não foi possível eliminar o consumo.',
+      life: 5000
+    });
+  }
 }
 
 async function reloadData() {
@@ -328,10 +309,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Toast position="top-right" />
-
-  <ConfirmDialog class="theme-adapted-dialog" append-to="self" />
-
   <section class="consumption-page category-page">
     <header class="page-heading">
       <div class="heading-content">
@@ -552,7 +529,7 @@ onMounted(async () => {
               <template v-else>
                 <p class="empty-title">Ainda não existem consumos</p>
                 <p class="empty-subtitle">
-                  Start por registar as suas despesas adicionando o seu primeiro consumo.
+                  Comece por registar as suas despesas adicionando o seu primeiro consumo.
                 </p>
                 <Button
                   label="Criar Novo Consumo"
@@ -626,6 +603,7 @@ onMounted(async () => {
       </template>
     </Card>
 
+    <!-- Modal Form (Criar/Editar) -->
     <Dialog
       v-model:visible="isDialogVisible"
       :header="isEditing ? 'Editar Consumo' : 'Novo Consumo'"
@@ -799,6 +777,48 @@ onMounted(async () => {
           />
         </div>
       </form>
+    </Dialog>
+
+    <!-- Modal Personalizado para Confirmação de Eliminação -->
+    <Dialog
+      v-model:visible="isConfirmDeleteVisible"
+      header="Confirmar Eliminação"
+      :modal="true"
+      :dismissableMask="!consumptionStore.isLoading"
+      :closable="!consumptionStore.isLoading"
+      append-to="self"
+      class="theme-adapted-dialog"
+      style="width: 100%; max-width: 450px"
+    >
+      <div class="flex items-start gap-4 py-2">
+        <i class="pi pi-exclamation-triangle text-amber-500 text-3xl flex-shrink-0 mt-1"></i>
+        <div class="space-y-1" v-if="itemToDelete">
+          <p class="text-sm leading-relaxed">
+            Tem a certeza que deseja eliminar o consumo da categoria
+            <strong>"{{ getCategoryName(itemToDelete.categoryId, itemToDelete) }}"</strong>
+            referente a <strong>{{ getMonthName(itemToDelete.month) }} / {{ itemToDelete.year }}</strong>?
+          </p>
+          <p class="text-xs text-red-400 font-medium pt-1">Esta acção é irreversível.</p>
+        </div>
+      </div>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <Button
+            label="Cancelar"
+            class="p-button-text p-button-secondary"
+            :disabled="consumptionStore.isLoading"
+            @click="isConfirmDeleteVisible = false"
+          />
+          <Button
+            label="Eliminar"
+            icon="pi pi-trash"
+            class="p-button-danger"
+            :loading="consumptionStore.isLoading"
+            @click="executeDelete"
+          />
+        </div>
+      </template>
     </Dialog>
   </section>
 </template>
