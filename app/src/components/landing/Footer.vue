@@ -1,4 +1,5 @@
 <script setup>
+import logo from '@/assets/img/logo.png'
 const scrollTo = (id) => {
   const element = document.getElementById(id)
   if (element) {
@@ -15,11 +16,11 @@ const scrollTo = (id) => {
         <!-- Coluna 1: Brand -->
         <div class="space-y-4 md:col-span-2">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-emerald-400 flex items-center justify-center overflow-hidden p-1.5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-emerald-400 flex items-center justify-center overflow-hidden">
               <img 
-                src="" 
+                :src="logo" 
                 alt="Plano de Consumo Logo" 
-                class="w-full h-full object-contain"
+                class="w-full h-full object-cover"
               />
             </div>
             <span class="text-lg font-bold text-white tracking-tight">Plano de Consumo</span>

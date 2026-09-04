@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import logo from '@/assets/img/logo.png'
 
 const router = useRouter()
 const isScrolled = ref(false)
@@ -42,11 +43,11 @@ const goToLogin = () => {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
       <!-- Logo -->
       <a href="#" class="flex items-center gap-3 group">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform overflow-hidden p-2">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform overflow-hidden">
           <img 
-            src="" 
+            :src="logo" 
             alt="Plano de Consumo Logo" 
-            class="w-full h-full object-contain"
+            class="w-full h-full object-cover"
           />
         </div>
         <span class="text-xl font-bold tracking-tight text-white">Plano de Consumo</span>
