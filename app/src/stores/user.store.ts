@@ -2,6 +2,14 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/services/api';
 
+export interface Category {
+  id: number;
+  name: string;
+  userId: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface User {
   id: number;
   name?: string | null;
@@ -75,7 +83,7 @@ export const useUserStore = defineStore('user', () => {
 
       return 'Resposta inválida do servidor.';
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Nome de utilizador ou palavra-passe incorretos.';
+      const message = 'Nome de utilizador ou palavra-passe incorretos.';
       error.value = message;
       return message;
     } finally {
@@ -89,6 +97,24 @@ export const useUserStore = defineStore('user', () => {
 
     try {
       const response = await api.post<unknown, User>('/users', payload);
+
+      if(response){
+        const categories = [
+          { name: "Alimentação", editable: false },
+          { name: "Habitação (Renda)", editable: false },
+          { name: "Transporte", editable: false },
+          { name: "Saúde", editable: false },
+          { name: "Educação", editable: false },
+          { name: "Lazer", editable: false },
+          { name: "Serviços", editable: false },
+          { name: "Dívidas", editable: false },
+          { name: "Poupança", editable: false }
+        ];
+        categories.forEach(async (cat) =>
+           await api.post<unknown, Category>(`/categories?userId=${response.id}`, cat)
+        );
+      }
+
       return response;
     } catch (err: any) {
       const message = err.response?.data?.message || 'Erro ao realizar o cadastro.';
