@@ -105,7 +105,6 @@ export const useUserStore = defineStore('user', () => {
           { name: "Transporte", editable: false },
           { name: "Saúde", editable: false },
           { name: "Educação", editable: false },
-          { name: "Lazer", editable: false },
           { name: "Serviços", editable: false },
           { name: "Dívidas", editable: false },
           { name: "Poupança", editable: false }

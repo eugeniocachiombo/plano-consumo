@@ -43,6 +43,9 @@ export const createCategorySchema = z.object({
         .min(1, "O nome da categoria é obrigatório")
         .max(255, "O nome da categoria deve ter no máximo 255 caracteres"),
 
+    editable: z.boolean("O campo editable deve ser um booleano"
+    ).optional().default(true),
+
     userId: requiredNumber(
         "O utilizador é obrigatório",
         "Selecione um utilizador válido"
