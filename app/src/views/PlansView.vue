@@ -18,40 +18,35 @@ import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
 import { useConfirm } from 'primevue/useconfirm';
 
-// Stores
 const consumptionPlanStore = useConsumptionPlanStore();
 const categoryStore = useCategoryStore();
 
-// UI Utilities
 const toast = useToast();
 const confirm = useConfirm();
 
-// Modal Controls
 const isDialogVisible = ref(false);
 const isEditing = ref(false);
 const editingId = ref(null);
 
-// Table & Pagination
 const rowsPerPage = ref(10);
 
-// Filters State
 const searchQuery = ref('');
 const selectedCategoryFilter = ref(null);
 const selectedMonthFilter = ref(null);
 const selectedYearFilter = ref(null);
 const isFilterExpandedOnMobile = ref(false);
 
-// Form Reactive State
+const getCurrentMonth = () => new Date().getMonth() + 1;
+
 const form = reactive({
   amount: null,
-  month: null,
+  month: getCurrentMonth(),
   year: new Date().getFullYear(),
   categoryId: null
 });
 
 const fieldErrors = ref({});
 
-// Constants
 const monthsOptions = [
   { label: 'Janeiro', value: 1 },
   { label: 'Fevereiro', value: 2 },
@@ -67,7 +62,6 @@ const monthsOptions = [
   { label: 'Dezembro', value: 12 }
 ];
 
-// Computed Categories Options
 const categoriesOptions = computed(() => {
   return (categoryStore.categories || []).map((c) => ({
     label: c.name,
@@ -75,7 +69,6 @@ const categoriesOptions = computed(() => {
   }));
 });
 
-// Computed Available Years
 const yearsOptions = computed(() => {
   const plans = consumptionPlanStore.consumptionPlans || [];
   const yearsSet = new Set(plans.map((p) => Number(p.year)).filter((y) => !isNaN(y) && y > 0));
@@ -88,7 +81,22 @@ const yearsOptions = computed(() => {
     .map((y) => ({ label: String(y), value: y }));
 });
 
-// Advanced Computed Filtering (Client-side)
+const formYearsOptions = computed(() => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+
+  for (let year = currentYear; year > currentYear - 5; year--) {
+    years.push({ label: String(year), value: year });
+  }
+
+  if (form.year && !years.some((y) => y.value === form.year)) {
+    years.push({ label: String(form.year), value: form.year });
+    years.sort((a, b) => b.value - a.value);
+  }
+
+  return years;
+});
+
 const filteredPlans = computed(() => {
   let list = consumptionPlanStore.consumptionPlans || [];
 
@@ -159,7 +167,7 @@ function getErrorMessage(errorField) {
 
 function resetForm() {
   form.amount = null;
-  form.month = null;
+  form.month = getCurrentMonth();
   form.year = new Date().getFullYear();
   form.categoryId = null;
   fieldErrors.value = {};
@@ -176,7 +184,7 @@ function openEditDialog(plan) {
   isEditing.value = true;
   editingId.value = plan.id;
   form.amount = plan.amount !== null && plan.amount !== undefined ? Number(plan.amount) : null;
-  form.month = plan.month ? Number(plan.month) : null;
+  form.month = plan.month ? Number(plan.month) : getCurrentMonth();
   form.year = plan.year ? Number(plan.year) : new Date().getFullYear();
   form.categoryId = plan.categoryId ? Number(plan.categoryId) : null;
   fieldErrors.value = {};
@@ -187,7 +195,7 @@ function validateForm() {
   const errors = {};
   if (!form.categoryId) errors.categoryId = 'Selecione uma categoria.';
   if (!form.month) errors.month = 'Selecione um mês.';
-  if (!form.year || form.year < 2000 || form.year > 2100) errors.year = 'Informe um ano válido.';
+  if (!form.year) errors.year = 'Selecione um ano válido.';
   if (form.amount === null || form.amount === undefined || isNaN(form.amount) || form.amount <= 0) {
     errors.amount = 'Informe um montante válido maior que 0.';
   }
@@ -326,7 +334,6 @@ onMounted(async () => {
   <ConfirmDialog class="theme-adapted-dialog" append-to="self" />
 
   <section class="consumption-plan-page category-page">
-    <!-- Cabeçalho da Página -->
     <header class="page-heading">
       <div class="heading-content">
         <div class="title-with-badge">
@@ -352,7 +359,6 @@ onMounted(async () => {
       </div>
     </header>
 
-    <!-- Resumo Orçamental (KPI Summary Grid) -->
     <div class="kpi-summary-grid">
       <div class="kpi-card">
         <div class="kpi-icon bg-primary-soft">
@@ -385,7 +391,6 @@ onMounted(async () => {
       </div>
     </div>
 
-    <!-- Card da Tabela e Conteúdo -->
     <Card class="table-card border-none shadow-1">
       <template #content>
         <DataTable
@@ -400,7 +405,6 @@ onMounted(async () => {
           class="custom-datatable p-datatable-sm"
           dataKey="id"
         >
-          <!-- Cabeçalho Integrado -->
           <template #header>
             <div class="table-header-wrapper table-header">
               <div class="filter-top-row">
@@ -443,7 +447,6 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <!-- Filtros Selectores -->
               <div class="filter-selectors-grid" :class="{ 'mobile-hidden': !isFilterExpandedOnMobile }">
                 <div class="filter-item">
                   <label class="filter-label font-medium text-xs">Categoria</label>
@@ -499,7 +502,6 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <!-- Chips de Filtros Activos -->
               <div v-if="activeFiltersCount > 0" class="active-chips-bar">
                 <span class="chips-title">Filtros aplicados:</span>
                 <Tag v-if="searchQuery" severity="info" class="filter-chip">
@@ -619,7 +621,6 @@ onMounted(async () => {
       </template>
     </Card>
 
-    <!-- Dialog de Criação / Edição -->
     <Dialog
       v-model:visible="isDialogVisible"
       :header="isEditing ? 'Editar Plano de Consumo' : 'Novo Plano de Consumo'"
@@ -631,7 +632,6 @@ onMounted(async () => {
       style="width: 100%; max-width: 500px"
     >
       <form @submit.prevent="handleSave" class="form-grid" novalidate>
-        <!-- Categoria -->
         <div class="field">
           <label for="plan-category" class="required-label font-medium text-sm">Categoria</label>
           <Dropdown
@@ -663,7 +663,6 @@ onMounted(async () => {
           </small>
         </div>
 
-        <!-- Mês + Ano -->
         <div class="w-full flex flex-col sm:flex-row gap-4">
           <div class="w-full sm:w-1/2 field">
             <label for="plan-month" class="required-label font-medium text-sm">Mês</label>
@@ -696,19 +695,20 @@ onMounted(async () => {
 
           <div class="w-full sm:w-1/2 field">
             <label for="plan-year" class="required-label font-medium text-sm">Ano</label>
-            <InputNumber
+            <Dropdown
               id="plan-year"
               v-model="form.year"
-              :useGrouping="false"
-              :min="2000"
-              :max="2100"
-              placeholder="Ex: 2026"
+              :options="formYearsOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione o ano"
               class="w-full search-input-field theme-input"
-              inputClass="theme-input-element w-full"
+              panelClass="theme-dropdown-panel"
               :class="{ 'p-invalid': !!fieldErrors.year }"
               :invalid="!!fieldErrors.year"
               :disabled="consumptionPlanStore.isLoading"
               aria-describedby="plan-year-error"
+              @change="clearFieldError('year')"
               @update:modelValue="clearFieldError('year')"
             />
             <small
@@ -723,7 +723,6 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Montante -->
         <div class="field">
           <label for="plan-amount" class="required-label font-medium text-sm">Montante Planeado (Kz)</label>
           <InputNumber
@@ -754,7 +753,6 @@ onMounted(async () => {
           </small>
         </div>
 
-        <!-- Rodapé do Dialog -->
         <div class="dialog-footer">
           <Button
             type="button"

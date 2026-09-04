@@ -39,7 +39,7 @@ const isFilterExpandedOnMobile = ref(false);
 const form = reactive({
   amount: null,
   description: '',
-  month: null,
+  month: new Date().getMonth() + 1,
   year: new Date().getFullYear(),
   categoryId: null
 });
@@ -78,6 +78,17 @@ const yearsOptions = computed(() => {
   return Array.from(yearsSet)
     .sort((a, b) => b - a)
     .map((y) => ({ label: String(y), value: y }));
+});
+
+const formYearsOptions = computed(() => {
+  const currentYear = new Date().getFullYear();
+  const options = [];
+
+  for (let year = currentYear; year > currentYear - 5; year--) {
+    options.push({ label: String(year), value: year });
+  }
+
+  return options;
 });
 
 const filteredConsumptions = computed(() => {
@@ -153,7 +164,7 @@ function getErrorMessage(errorField) {
 function resetForm() {
   form.amount = null;
   form.description = '';
-  form.month = null;
+  form.month = new Date().getMonth() + 1;
   form.year = new Date().getFullYear();
   form.categoryId = null;
   fieldErrors.value = {};
@@ -182,7 +193,7 @@ function validateForm() {
   const errors = {};
   if (!form.categoryId) errors.categoryId = 'Selecione uma categoria.';
   if (!form.month) errors.month = 'Selecione um mês.';
-  if (!form.year || form.year < 2000 || form.year > 2100) errors.year = 'Informe um ano válido.';
+  if (!form.year) errors.year = 'Selecione um ano válido.';
   if (form.amount === null || form.amount === undefined || isNaN(form.amount) || form.amount <= 0) {
     errors.amount = 'Informe um montante válido maior que 0.';
   }
@@ -713,19 +724,20 @@ onMounted(async () => {
 
           <div class="w-full sm:w-1/2 field">
             <label for="consumption-year" class="required-label font-medium text-sm">Ano</label>
-            <InputNumber
+            <Dropdown
               id="consumption-year"
               v-model="form.year"
-              :useGrouping="false"
-              :min="2000"
-              :max="2100"
-              placeholder="Ex: 2026"
+              :options="formYearsOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione o ano"
               class="w-full search-input-field theme-input"
-              inputClass="theme-input-element w-full"
+              panelClass="theme-dropdown-panel"
               :class="{ 'p-invalid': !!fieldErrors.year }"
               :invalid="!!fieldErrors.year"
               :disabled="consumptionStore.isLoading"
               aria-describedby="consumption-year-error"
+              @change="clearFieldError('year')"
               @update:modelValue="clearFieldError('year')"
             />
             <small
