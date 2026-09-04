@@ -19,26 +19,46 @@
       <Button icon="pi pi-bell" text rounded severity="secondary" aria-label="Notificações" />
 
       <!-- Botão/Área do Utilizador com Dropdown Trigger -->
-      <div class="topbar-user" aria-haspopup="true" aria-controls="user_menu" @click="toggleUserMenu">
-        <div class="avatar">EC</div>
+      <div class="topbar-user textcolor" aria-haspopup="true" aria-controls="user_menu" @click="toggleUserMenu">
+        <div class="avatar">
+          {{ userInitials }}
+        </div>
         <div class="user-meta">
           <strong>
-            {{ userStore?.currentUser?.name
-              ? (userStore.currentUser.name.charAt(0).toUpperCase() + userStore.currentUser.name.slice(1).toLowerCase())
-              : 'Não Encontrado' }}
+            {{ formatTitleCase(userStore?.currentUser?.name, 'Não Encontrado') }}
           </strong>
+
           <small>
-            {{ userStore?.currentUser?.profile
-              ? (userStore.currentUser.profile.charAt(0).toUpperCase() +
-                userStore.currentUser.profile.slice(1).toLowerCase())
-            : '' }}
+            {{ formatTitleCase(userStore?.currentUser?.profile, 'Consumidor') }}
           </small>
         </div>
         <i class="pi pi-angle-down user-chevron"></i>
       </div>
 
-      <Menu ref="userMenu" id="user_menu" :model="userMenuItems" :popup="true" />
-      <ConfirmDialog />
+      <!-- Menu da Topbar -->
+      <Menu ref="userMenu" id="user_menu" :model="userMenuItems" :popup="true" append-to=".app-shell"
+        class="theme-adapted-dialog" />
+
+      <!-- Dialog Personalizado para Confirmação de Saída -->
+      <Dialog v-model:visible="isLogoutDialogVisible" header="Confirmar saída" :modal="true"
+        :dismissableMask="!isLoggingOut" :closable="!isLoggingOut" append-to=".app-shell" class="theme-adapted-dialog"
+        style="width: 100%; max-width: 450px;">
+        <div class="flex items-start gap-4 py-2">
+          <i class="pi pi-exclamation-triangle text-amber-500 text-3xl flex-shrink-0 mt-1"></i>
+          <p class="text-sm leading-relaxed">
+            Tem certeza de que deseja encerrar a sua sessão?
+          </p>
+        </div>
+
+        <template #footer>
+          <div class="dialog-footer">
+            <Button label="Cancelar" class="p-button-text p-button-secondary" :disabled="isLoggingOut"
+              @click="isLogoutDialogVisible = false" />
+            <Button label="Sair" icon="pi pi-sign-out" class="p-button-danger" :loading="isLoggingOut"
+              @click="handleLogout" />
+          </div>
+        </template>
+      </Dialog>
     </div>
   </header>
 </template>
@@ -48,8 +68,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Button from 'primevue/button';
 import Menu from 'primevue/menu';
-import ConfirmDialog from 'primevue/confirmdialog';
-import { useConfirm } from 'primevue/useconfirm';
+import Dialog from 'primevue/dialog';
 import { useUserStore } from '@/stores/user.store';
 
 defineProps({
@@ -61,33 +80,39 @@ defineEmits(['toggle-menu', 'toggle-dark']);
 const route = useRoute();
 const router = useRouter();
 const userStore = useUserStore();
-const confirm = useConfirm();
 
 const userMenu = ref(null);
+
+const isLogoutDialogVisible = ref(false);
+const isLoggingOut = ref(false);
 
 const toggleUserMenu = (event) => {
   userMenu.value.toggle(event);
 };
 
-// Executa o encerramento da sessão
 const handleLogout = async () => {
-  await userStore.logout();
+  try {
+    isLoggingOut.value = true;
+    await userStore.logout();
+  } finally {
+    isLoggingOut.value = false;
+    isLogoutDialogVisible.value = false;
+  }
 };
 
-// Confirmação antes de sair
 const confirmLogout = () => {
-  confirm.require({
-    message: 'Tem certeza de que deseja encerrar a sua sessão?',
-    header: 'Confirmar saída',
-    icon: 'pi pi-exclamation-triangle',
-    rejectLabel: 'Cancelar',
-    acceptLabel: 'Sair',
-    acceptClass: 'p-button-danger',
-    accept: () => {
-      handleLogout();
-    }
-  });
+  isLogoutDialogVisible.value = true;
 };
+
+const userInitials = computed(() => {
+  const name = userStore?.currentUser?.name;
+  if (!name) return 'PK';
+  const parts = name.trim().split(' ');
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+});
 
 const userMenuItems = ref([
   {
@@ -121,28 +146,23 @@ const pageTitle = computed(() => {
   return titles[route.name] || 'Dashboard';
 });
 
+function formatTitleCase(value, defaultValue = '') {
+  if (!value) return defaultValue;
+
+  return value
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
 onMounted(async () => {
   await userStore.initUser();
-})
+});
 </script>
 
 <style scoped>
-.topbar-user {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--border-radius, 6px);
-  transition: background-color 0.2s;
-}
-
-.topbar-user:hover {
-  background-color: var(--surface-hover, rgba(0, 0, 0, 0.04));
-}
-
-.user-chevron {
-  font-size: 0.875rem;
-  color: var(--text-color-secondary, #6c757d);
+.textcolor {
+  color: var(--text-color);
 }
 </style>
