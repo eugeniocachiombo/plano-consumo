@@ -376,6 +376,7 @@ onMounted(async () => {
             <template #body="{ data }">
               <div class="action-buttons">
                 <Button
+                  v-if="data.editable"
                   icon="pi pi-pencil"
                   class="p-button-text p-button-rounded p-button-warning action-btn"
                   v-tooltip.top="'Editar'"
@@ -383,6 +384,7 @@ onMounted(async () => {
                   @click="openEditDialog(data)"
                 />
                 <Button
+                  v-if="data.editable"
                   icon="pi pi-trash"
                   class="p-button-text p-button-rounded p-button-danger action-btn"
                   v-tooltip.top="'Eliminar'"
