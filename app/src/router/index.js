@@ -4,7 +4,13 @@ import { useUserStore } from "@/stores/user.store";
 const routes = [
   {
     path: "/",
-    redirect: "/dashboard"
+    name: "landpage",
+    component: () => import("@/views/LandingPage.vue"),
+    meta: {
+      requiresGuest: true,
+      title: 'Plano de Consumo — Controle os seus gastos',
+      lang: 'pt-AO'
+    }
   },
   {
     path: "/login",
