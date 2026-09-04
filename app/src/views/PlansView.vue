@@ -207,7 +207,7 @@ function validateForm() {
 async function handleSave() {
   if (consumptionPlanStore.isLoading) return;
 
-  if (!validateForm()) return;
+  // if (!validateForm()) return;
 
   try {
     const payload = {
@@ -242,6 +242,8 @@ async function handleSave() {
     if (responseData?.errors) {
       fieldErrors.value = { ...responseData.errors };
     }
+
+    console.log("ok")
 
     toast.add({
       severity: 'error',

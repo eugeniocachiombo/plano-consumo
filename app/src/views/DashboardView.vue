@@ -184,7 +184,7 @@ function getCategoryName(categoryId, rowData) {
 async function saveConsumption() {
   if (consumptionStore.isLoading) return;
 
-  if (!validateForm()) return;
+  // if (!validateForm()) return;
 
   try {
     await consumptionStore.create({

@@ -205,7 +205,7 @@ function validateForm() {
 async function handleSave() {
   if (consumptionStore.isLoading) return;
 
-  if (!validateForm()) return;
+  // if (!validateForm()) return;
 
   try {
     const payload = {
