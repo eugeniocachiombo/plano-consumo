@@ -182,6 +182,7 @@ function getCategoryName(categoryId, rowData) {
 }
 
 async function saveConsumption() {
+  if (!validateForm()) return;
   if (consumptionStore.isLoading) return;
 
   try {
@@ -288,7 +289,7 @@ onMounted(async () => {
           </div>
         </template>
         <template #content>
-          <div class="category-list">
+          <div v-if="categoriesSummary.length > 0" class="category-list">
             <div v-for="category in categoriesSummary" :key="category.name" class="category-item">
               <div class="category-top">
                 <span>{{ category.name }}</span>
@@ -297,6 +298,10 @@ onMounted(async () => {
               <ProgressBar :value="category.percent" :show-value="false" />
               <small>{{ category.percent }}% do consumo</small>
             </div>
+          </div>
+          <div v-else class="empty-state">
+            <i class="pi pi-inbox text-3xl text-400 mb-2"></i>
+            <p>Sem categorias cadastradas</p>
           </div>
         </template>
       </Card>
@@ -312,6 +317,12 @@ onMounted(async () => {
 
       <template #content>
         <DataTable :value="recentConsumptions" responsive-layout="scroll">
+          <template #empty>
+            <div class="empty-state">
+              <i class="pi pi-receipt text-3xl text-400 mb-2"></i>
+              <p>Nenhum consumo registrado recente</p>
+            </div>
+          </template>
           <Column header="Data">
             <template #body="{ data }">
               {{ data.month }}/{{ data.year }}

@@ -230,3 +230,18 @@ html.app-dark,
   background: var(--primary, var(--primary-color)) !important;
   color: #ffffff !important;
 }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-color-secondary, #6c757d);
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+}
