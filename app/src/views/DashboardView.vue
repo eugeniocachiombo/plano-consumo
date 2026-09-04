@@ -385,7 +385,11 @@ onMounted(async () => {
               {{ getCategoryName(data.categoryId, data) }}
             </template>
           </Column>
-          <Column field="description" header="Descrição" />
+          <Column header="Descrição">
+            <template #body="{ data }">
+              <strong>{{ data.description || '--' }}</strong>
+            </template>
+          </Column>
           <Column header="Valor">
             <template #body="{ data }">
               <strong>{{ Number(data.amount || 0).toLocaleString('pt-AO') }} Kz</strong>
