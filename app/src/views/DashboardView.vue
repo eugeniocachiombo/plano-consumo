@@ -360,6 +360,7 @@ onMounted(async () => {
             optionLabel="label"
             optionValue="value"
             placeholder="Selecione"
+            filter
             class="w-full"
             :class="{ 'p-invalid': !!fieldErrors.categoryId }"
             :invalid="!!fieldErrors.categoryId"

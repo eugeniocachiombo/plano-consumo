@@ -90,6 +90,24 @@ html.app-dark,
   gap: 0.25rem;
 }
 
+:deep(.p-select.p-invalid),
+:deep(.p-dropdown.p-invalid),
+:deep(.p-inputtext.p-invalid),
+:deep(.p-inputnumber.p-invalid .p-inputnumber-input),
+:deep(.p-textarea.p-invalid) {
+  border-color: #ef4444 !important;
+}
+
+/* Garante o destaque também quando o campo com erro recebe foco */
+:deep(.p-select.p-invalid:focus-within),
+:deep(.p-dropdown.p-invalid:focus-within),
+:deep(.p-inputtext.p-invalid:focus),
+:deep(.p-inputnumber.p-invalid .p-inputnumber-input:focus),
+:deep(.p-textarea.p-invalid:focus) {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 1px #ef4444 !important;
+}
+
 :deep(.p-dialog) {
   background: var(--surface-card) !important;
   border: 1px solid var(--surface-border) !important;
