@@ -14,13 +14,13 @@ app.use(cors({
 }));
 
 app.use(express.json());
-app.get('/', (req, res) => {
-  res.json({ message: 'API rodando...!' });
-});
 app.use("/api", userRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", consumptionPlanRoutes);
 app.use("/api", consumptionRoutes);
+app.get('/', (req, res) => {
+  res.json({ message: 'API rodando...!' });
+});
 
 
 app.listen(3000, () => {
