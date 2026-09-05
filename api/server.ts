@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
-import { userRoutes } from "./routes/user.route"; 
-import { categoryRoutes } from "./routes/category.routes"; 
-import { consumptionPlanRoutes } from "./routes/consumption-plan.routes";
-import { consumptionRoutes } from "./routes/consumption.routes";
+import { userRoutes } from "./routes/user.route.js";
+import { categoryRoutes } from "./routes/category.routes.js";
+import { consumptionPlanRoutes } from "./routes/consumption-plan.routes.js";
+import { consumptionRoutes } from "./routes/consumption.routes.js";
 
 const app = express();
 
