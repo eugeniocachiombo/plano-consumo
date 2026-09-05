@@ -1,13 +1,41 @@
 <script setup>
-// Variável configurável para inserção posterior do link de descarregamento real
+import { ref, onMounted } from 'vue'
+
+const deferredPrompt = ref(null)
 const downloadUrl = '#'
 
-const handleDownload = () => {
+onMounted(() => {
+  
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault()
+    deferredPrompt.value = e
+  })
+})
+
+const handleDownload = async () => {
+  
+  if (deferredPrompt.value) {
+    
+    deferredPrompt.value.prompt()
+    const { outcome } = await deferredPrompt.value.userChoice
+
+    if (outcome === 'accepted') {
+      console.log('Aplicação instalada com sucesso!')
+    }
+
+    deferredPrompt.value = null
+    return
+  }
+
+  // Fallback caso haja um link de loja de aplicações no futuro
   if (downloadUrl && downloadUrl !== '#') {
     window.location.href = downloadUrl
-  } else {
-    alert('O link de descarregamento estará disponível em breve!')
+    return
   }
+
+  alert(
+    'Para instalar no iPhone (Safari): Toque no ícone de "Partilhar" (quadrado com seta) na barra inferior e escolha "Adicionar à Tela de Início".\n\n(Se estiver no Android/PC, a aplicação pode já estar instalada ou o link direto estará disponível em breve!)'
+  )
 }
 </script>
 
