@@ -9,6 +9,7 @@ import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import ProgressBar from 'primevue/progressbar';
 import Select from 'primevue/select';
+import Skeleton from 'primevue/skeleton';
 import Tag from 'primevue/tag';
 import Toast from 'primevue/toast';
 
@@ -29,6 +30,7 @@ const toast = useToast();
 const periods = ['Últimos 6 meses', 'Este ano'];
 const period = ref(periods[0]);
 const showNew = ref(false);
+const isLoadingData = ref(true);
 
 const currentDate = new Date();
 const currentMonth = currentDate.getMonth() + 1;
@@ -80,7 +82,7 @@ function validateForm() {
   return Object.keys(errors).length === 0;
 }
 
-// Opcoes de Categorias para o Select
+// Opções de Categorias para o Select
 const categoriesOptions = computed(() => {
   return (categoryStore.categories || []).map((c) => ({
     label: c.name,
@@ -88,19 +90,19 @@ const categoriesOptions = computed(() => {
   }));
 });
 
-// Totais do Mes Atual
+// Totais do Mês Atual
 const currentMonthPlanTotal = computed(() => {
   const plans = consumptionPlanStore.consumptionPlans || [];
   return plans
     .filter((p) => Number(p.month) === currentMonth && Number(p.year) === currentYear)
-    .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 });
 
 const currentMonthConsumptionTotal = computed(() => {
   const items = consumptionStore.consumptions || [];
   return items
     .filter((c) => Number(c.month) === currentMonth && Number(c.year) === currentYear)
-    .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 });
 
 const remainingAmount = computed(() => {
@@ -113,7 +115,7 @@ const availablePercent = computed(() => {
   return Math.max(0, Math.round(pct));
 });
 
-// Dados do Grafico
+// Dados do Gráfico
 const chartData = computed(() => {
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const items = consumptionStore.consumptions || [];
@@ -123,12 +125,12 @@ const chartData = computed(() => {
       const monthNum = index + 1;
       const total = items
         .filter((c) => Number(c.year) === currentYear && Number(c.month) === monthNum)
-        .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+        .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
       return { month: monthName, value: total };
     });
   }
 
-  // Ultimos 6 meses
+  // Últimos 6 meses
   const result = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(currentYear, currentDate.getMonth() - i, 1);
@@ -136,48 +138,53 @@ const chartData = computed(() => {
     const y = d.getFullYear();
     const total = items
       .filter((c) => Number(c.year) === y && Number(c.month) === m)
-      .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+      .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
     result.push({ month: monthLabels[m - 1], value: total });
   }
   return result;
 });
 
-// Categorias do Mes Atual para a lista
+// --- PROCESSAMENTO DO RESUMO POR CATEGORIA ---
 const categoriesSummary = computed(() => {
   const categories = categoryStore.categories || [];
   const items = consumptionStore.consumptions || [];
-  
-  // Garantir parsing correto do total mensal
+
   const monthTotal = items
     .filter((c) => Number(c.month) === currentMonth && Number(c.year) === currentYear)
     .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-  return categories
-    .map((cat) => {
-      const totalCat = items
-        .filter(
-          (c) =>
-            String(c.categoryId) === String(cat.id) &&
-            Number(c.month) === currentMonth &&
-            Number(c.year) === currentYear
-        )
-        .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+  const mapped = categories.map((cat) => {
+    const totalCat = items
+      .filter(
+        (c) =>
+          String(c.categoryId) === String(cat.id) &&
+          Number(c.month) === currentMonth &&
+          Number(c.year) === currentYear
+      )
+      .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-      const rawPercent = monthTotal > 0 ? (totalCat / monthTotal) * 100 : 0;
+    const rawPercent = monthTotal > 0 ? (totalCat / monthTotal) * 100 : 0;
 
-      return {
-        name: cat.name,
-        value: totalCat,
-        rawPercent,
-        percent: Math.round(rawPercent)
-      };
-    })
-    .sort((a, b) => b.rawPercent - a.rawPercent);
+    return {
+      id: cat.id,
+      name: cat.name,
+      value: totalCat,
+      rawPercent,
+      percent: Math.round(rawPercent)
+    };
+  });
+
+  return mapped.sort((a, b) => {
+    if (b.rawPercent !== a.rawPercent) {
+      return b.rawPercent - a.rawPercent;
+    }
+    return b.value - a.value;
+  });
 });
 
 // --- PAGINAÇÃO DO RESUMO POR CATEGORIA ---
 const categoryPage = ref(1);
-const categoriesPerPage = 4; // Ajuste este número conforme a altura ideal do seu Card
+const categoriesPerPage = 4;
 
 const totalCategoryPages = computed(() => {
   return Math.ceil(categoriesSummary.value.length / categoriesPerPage) || 1;
@@ -200,7 +207,7 @@ function nextCategoryPage() {
   }
 }
 
-// Ultimos Consumos para a Tabela
+// Últimos Consumos para a Tabela
 const recentConsumptions = computed(() => {
   const list = [...(consumptionStore.consumptions || [])];
   return list.sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 5);
@@ -214,7 +221,7 @@ function formatCurrency(val) {
 function getCategoryName(categoryId, rowData) {
   if (rowData?.category?.name) return rowData.category.name;
   const list = categoryStore.categories || [];
-  const cat = list.find((c) => Number(c.id) === Number(categoryId));
+  const cat = list.find((c) => String(c.id) === String(categoryId));
   return cat ? cat.name : `Categoria #${categoryId}`;
 }
 
@@ -257,6 +264,7 @@ async function saveConsumption() {
 }
 
 onMounted(async () => {
+  isLoadingData.value = true;
   try {
     await Promise.all([
       consumptionStore.list(),
@@ -265,6 +273,8 @@ onMounted(async () => {
     ]);
   } catch (error) {
     console.error(error);
+  } finally {
+    isLoadingData.value = false;
   }
 });
 </script>
@@ -281,7 +291,19 @@ onMounted(async () => {
       <Button label="Novo consumo" icon="pi pi-plus" @click="openCreateDialog" />
     </div>
 
-    <div class="stats-grid">
+    <!-- CARDS DE ESTATÍSTICA (SKELETON / DADOS REAL) -->
+    <div v-if="isLoadingData" class="stats-grid">
+      <Card v-for="i in 3" :key="i">
+        <template #content>
+          <div class="flex flex-column gap-2">
+            <Skeleton width="40%" height="1rem" />
+            <Skeleton width="70%" height="2rem" />
+            <Skeleton width="30%" height="1rem" />
+          </div>
+        </template>
+      </Card>
+    </div>
+    <div v-else class="stats-grid">
       <StatCard
         label="Plano de consumo"
         :value="formatCurrency(currentMonthPlanTotal)"
@@ -306,18 +328,23 @@ onMounted(async () => {
     </div>
 
     <div class="dashboard-grid">
+      <!-- GRÁFICO (SKELETON / DADOS REAL) -->
       <Card class="dashboard-card">
         <template #title>
           <div class="card-title-row">
             <span>Consumo mensal</span>
-            <Select v-model="period" :options="periods" />
+            <Select v-model="period" :options="periods" :disabled="isLoadingData" />
           </div>
         </template>
         <template #content>
-          <ConsumptionChart :data="chartData" />
+          <div v-if="isLoadingData" class="flex flex-column gap-3 py-4">
+            <Skeleton width="100%" height="220px" />
+          </div>
+          <ConsumptionChart v-else :data="chartData" />
         </template>
       </Card>
 
+      <!-- RESUMO POR CATEGORIA (SKELETON / DADOS REAL) -->
       <Card class="dashboard-card">
         <template #title>
           <div class="card-title-row">
@@ -326,9 +353,24 @@ onMounted(async () => {
           </div>
         </template>
         <template #content>
-          <div v-if="categoriesSummary.length > 0" class="category-wrapper">
+          <!-- Skeleton Loading -->
+          <div v-if="isLoadingData" class="category-wrapper">
             <div class="category-list">
-              <div v-for="category in paginatedCategoriesSummary" :key="category.name" class="category-item">
+              <div v-for="n in 4" :key="n" class="category-item">
+                <div class="category-top mb-1">
+                  <Skeleton width="40%" height="1rem" />
+                  <Skeleton width="30%" height="1rem" />
+                </div>
+                <Skeleton width="100%" height="0.5rem" borderRadius="10px" />
+                <Skeleton width="25%" height="0.75rem" class="mt-1" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Conteúdo Real -->
+          <div v-else-if="categoriesSummary.length > 0" class="category-wrapper">
+            <div class="category-list">
+              <div v-for="category in paginatedCategoriesSummary" :key="category.id || category.name" class="category-item">
                 <div class="category-top">
                   <span>{{ category.name }}</span>
                   <strong>{{ category.value.toLocaleString('pt-AO') }} Kz</strong>
@@ -338,7 +380,6 @@ onMounted(async () => {
               </div>
             </div>
 
-            <!-- Navegação da Paginação -->
             <div v-if="totalCategoryPages > 1" class="category-pagination">
               <small class="text-secondary">
                 Página {{ categoryPage }} de {{ totalCategoryPages }}
@@ -371,6 +412,7 @@ onMounted(async () => {
       </Card>
     </div>
 
+    <!-- TABELA ÚLTIMOS CONSUMOS (SKELETON / DADOS REAL) -->
     <Card class="dashboard-card">
       <template #title>
         <div class="card-title-row">
@@ -380,7 +422,15 @@ onMounted(async () => {
       </template>
 
       <template #content>
-        <DataTable :value="recentConsumptions" responsive-layout="scroll">
+        <DataTable v-if="isLoadingData" :value="[{}, {}, {}, {}]">
+          <Column header="Data"><template #body><Skeleton width="60%" /></template></Column>
+          <Column header="Categoria"><template #body><Skeleton width="70%" /></template></Column>
+          <Column header="Descrição"><template #body><Skeleton width="80%" /></template></Column>
+          <Column header="Valor"><template #body><Skeleton width="50%" /></template></Column>
+          <Column header="Estado"><template #body><Skeleton width="40%" /></template></Column>
+        </DataTable>
+
+        <DataTable v-else :value="recentConsumptions" responsive-layout="scroll">
           <template #empty>
             <div class="empty-state">
               <i class="pi pi-receipt text-3xl text-400 mb-2"></i>
@@ -531,12 +581,11 @@ onMounted(async () => {
 <style scoped>
 @import '../assets/dashboard.css';
 
-/* Estilos adicionados para a Paginação do Resumo de Categorias */
 .category-wrapper {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 280px; /* Mantém a altura fixa do card */
+  min-height: 280px;
 }
 
 .category-list {
