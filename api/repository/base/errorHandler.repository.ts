@@ -36,10 +36,7 @@ export function errorReport(res: Response, error: unknown) {
             }
             default:
                 return res.status(400).json({
-                    test: 'test',
-                    message: error.message,
-                    meta: error.meta,
-                    name: error.name,
+                    message: "Erro na operação de base de dados",
                     code: error.code
                 });
         }
