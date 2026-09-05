@@ -4,7 +4,7 @@ import { errorReport } from "../repository/base/errorHandler.repository";
 import jwt from "jsonwebtoken";
 
 const userRoutes = Router();
-const JWT_SECRET = process.env.JWT_SECRET || "sua_chave_secreta_aqui";
+const JWT_SECRET = String(process.env.JWT_SECRET);
 
 // Rota de Login
 userRoutes.post("/users/login", async (req: Request, res: Response) => {
