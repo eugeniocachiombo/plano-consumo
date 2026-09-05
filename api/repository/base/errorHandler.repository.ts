@@ -36,6 +36,7 @@ export function errorReport(res: Response, error: unknown) {
             }
             default:
                 return res.status(400).json({
+                    test: 'test',
                     message: error.message,
                     meta: error.meta,
                     name: error.name,
@@ -48,5 +49,5 @@ export function errorReport(res: Response, error: unknown) {
         return res.status(404).json({ message: "Registo não encontrado" });
     }
 
-    // return res.status(500).json({ message: "Erro interno do servidor" });
+    return res.status(500).json({ message: "Erro interno do servidor" });
 }
