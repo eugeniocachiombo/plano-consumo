@@ -6,5 +6,6 @@ const connectionString = `${process.env.DATABASE_URL}`;
 
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
+console.log("DB URL definida:", !!process.env.DATABASE_URL);
 
 export { prisma };
