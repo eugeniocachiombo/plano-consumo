@@ -45,7 +45,7 @@ export function errorReport(res: Response, error: unknown) {
         return res.status(404).json({ message: "Registo não encontrado" });
     }
 
-    return res.status(500).json({ error });
+    return res.status(500).json({ message: error?.message, code: error?.code });
 
     // return res.status(500).json({ message: "Erro interno do servidor" });
 }
