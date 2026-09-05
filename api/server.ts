@@ -20,7 +20,10 @@ app.use("/api", consumptionPlanRoutes);
 app.use("/api", consumptionRoutes);
 
 app.get("/", (req, res) => {
-  res.json({ message: "API rodando...!" });
+  res.json({
+    message: "API rodando!",
+    environment: process.env.NODE_ENV,
+  });
 });
 
 
