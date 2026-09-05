@@ -5,7 +5,16 @@ import { prisma } from '../lib/prisma';
 
 export const createUserSchema = z.object({
     name: z.string().transform(v => v === "" ? undefined : v).optional(),
-    username: z.string().min(3, "Nome de utilizador é obrigatório"),
+    username: z.string()
+        .min(3, "Nome de utilizador é obrigatório")
+        .refine(async (username) => {
+            const existingUser = await prisma.user.findUnique({
+                where: { username }
+            });
+            return !existingUser; 
+        }, {
+            message: "Este nome de utilizador já está em uso, escolha um outro"
+        }),
     password: z.string().min(6, "A palavra-passe deve ter pelo menos 6 caracteres")
 });
 

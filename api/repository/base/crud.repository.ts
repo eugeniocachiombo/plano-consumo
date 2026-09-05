@@ -40,7 +40,7 @@ export class Crud {
 
     async create(data: unknown, model?: PrismaModel, customSchema?: ZodSchema) {
         const schema = customSchema || this.schemas?.create;
-        let validatedData = schema ? schema.parse(data) : data;
+        let validatedData = schema ? schema.parseAsync(data) : data;
         validatedData = await this.beforeCreate(validatedData);
 
         const m = this.getModel(model);
@@ -73,7 +73,7 @@ export class Crud {
         await this.find(id, model);
 
         const schema = customSchema || this.schemas?.update;
-        let validatedData = schema ? schema.parse(data) : data;
+        let validatedData = schema ? schema.parseAsync(data) : data;
         validatedData = await this.beforeUpdate(validatedData);
 
         const m = this.getModel(model);

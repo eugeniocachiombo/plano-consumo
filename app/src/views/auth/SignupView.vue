@@ -159,9 +159,8 @@ async function handleRegister() {
                 <InputText 
                   id="username" 
                   v-model="form.username" 
-                  disabled
                   placeholder="joao.silva" 
-                  class="w-full disabled-input" 
+                  class="w-full " 
                   :invalid="!!fieldErrors.username"
                   :aria-invalid="!!fieldErrors.username"
                   aria-describedby="username-error username-help"
