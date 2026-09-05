@@ -26,7 +26,7 @@ consumptionRoutes.get("/consumptions", async (req: Request, res: Response) => {
 
 consumptionRoutes.get("/consumptions/:id", async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = Number(req.params);
         const userId = Number(req.query.userId);
         const consumption = await consumptionRepository.findAndVerifyUser(id, userId);
         return res.status(200).json(consumption);
@@ -37,7 +37,7 @@ consumptionRoutes.get("/consumptions/:id", async (req: Request, res: Response) =
 
 consumptionRoutes.put("/consumptions/:id", async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = Number(req.params);
         const userId = Number(req.query.userId);
         await consumptionRepository.findAndVerifyUser(id, userId);
 
@@ -50,7 +50,7 @@ consumptionRoutes.put("/consumptions/:id", async (req: Request, res: Response) =
 
 consumptionRoutes.delete("/consumptions/:id", async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = Number(req.params);
         const userId = Number(req.query.userId);
         await consumptionRepository.findAndVerifyUser(id, userId);
 

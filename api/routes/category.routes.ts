@@ -26,7 +26,7 @@ categoryRoutes.get("/categories", async (req: Request, res: Response) => {
 
 categoryRoutes.get("/categories/:id", async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = Number(req.params);
         const userId = Number(req.query.userId);
         const category = await categoryRepository.findAndVerifyUser(id, userId);
         return res.status(200).json(category);
@@ -37,7 +37,7 @@ categoryRoutes.get("/categories/:id", async (req: Request, res: Response) => {
 
 categoryRoutes.put("/categories/:id", async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = Number(req.params);
         const userId = Number(req.query.userId);
         await categoryRepository.findAndVerifyUser(id, userId);
 
@@ -50,7 +50,7 @@ categoryRoutes.put("/categories/:id", async (req: Request, res: Response) => {
 
 categoryRoutes.delete("/categories/:id", async (req: Request, res: Response) => {
     try {
-        const { id } = req.params;
+        const id = Number(req.params);
         const userId = Number(req.query.userId);
         await categoryRepository.findAndVerifyUser(id, userId);
 
