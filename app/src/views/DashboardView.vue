@@ -146,7 +146,11 @@ const chartData = computed(() => {
 const categoriesSummary = computed(() => {
   const categories = categoryStore.categories || [];
   const items = consumptionStore.consumptions || [];
-  const monthTotal = currentMonthConsumptionTotal.value;
+  
+  // Garantir parsing correto do total mensal
+  const monthTotal = items
+    .filter((c) => Number(c.month) === currentMonth && Number(c.year) === currentYear)
+    .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
   return categories
     .map((cat) => {
@@ -159,15 +163,16 @@ const categoriesSummary = computed(() => {
         )
         .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-      const percent = monthTotal > 0 ? Math.round((totalCat / monthTotal) * 100) : 0;
+      const rawPercent = monthTotal > 0 ? (totalCat / monthTotal) * 100 : 0;
 
       return {
         name: cat.name,
         value: totalCat,
-        percent
+        rawPercent,
+        percent: Math.round(rawPercent)
       };
     })
-    .sort((a, b) => b.percent - a.percent);
+    .sort((a, b) => b.rawPercent - a.rawPercent);
 });
 
 // --- PAGINAÇÃO DO RESUMO POR CATEGORIA ---
