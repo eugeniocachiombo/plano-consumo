@@ -1,4 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL,
