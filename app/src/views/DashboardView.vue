@@ -167,7 +167,7 @@ const categoriesSummary = computed(() => {
         percent
       };
     })
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.percent - a.percent);
 });
 
 // --- PAGINAÇÃO DO RESUMO POR CATEGORIA ---
