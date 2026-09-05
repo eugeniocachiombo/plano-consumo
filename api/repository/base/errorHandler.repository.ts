@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { Prisma } from "../../generated/prisma/client";
 
 export function errorReport(res: Response, error: unknown) {
+    return res.status(500).json({ message: error?.message, code: error?.code });
     if (error instanceof ZodError) {
         return res.status(400).json({
             message: "Verifique os campos do formulário",
@@ -44,8 +45,6 @@ export function errorReport(res: Response, error: unknown) {
     if (error instanceof Error && error.message === "NOT_FOUND") {
         return res.status(404).json({ message: "Registo não encontrado" });
     }
-
-    return res.status(500).json({ message: error?.message, code: error?.code });
 
     // return res.status(500).json({ message: "Erro interno do servidor" });
 }
