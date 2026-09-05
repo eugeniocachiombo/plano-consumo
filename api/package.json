@@ -34,5 +34,13 @@
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.23.0",
     "zod": "^4.5.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "bcrypt",
+      "prisma",
+      "@prisma/engines",
+      "esbuild"
+    ]
   }
 }
