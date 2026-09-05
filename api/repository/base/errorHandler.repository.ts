@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 import { Prisma } from "../../generated/prisma/client";
 
 export function errorReport(res: Response, error: unknown) {
-    return res.status(500).json({ message: error?.message, code: error?.code });
+    
     if (error instanceof ZodError) {
         return res.status(400).json({
             message: "Verifique os campos do formulário",
@@ -36,7 +36,9 @@ export function errorReport(res: Response, error: unknown) {
             }
             default:
                 return res.status(400).json({
-                    message: "Erro na operação de base de dados",
+                    message: error.message,
+                    meta: error.meta,
+                    name: error.name,
                     code: error.code
                 });
         }
