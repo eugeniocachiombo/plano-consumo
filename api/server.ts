@@ -18,6 +18,9 @@ app.use("/api", userRoutes);
 app.use("/api", categoryRoutes);
 app.use("/api", consumptionPlanRoutes);
 app.use("/api", consumptionRoutes);
+app.get('/api', (req, res) => {
+  res.json({ message: 'API rodando...!' });
+});
 
 app.listen(3000, () => {
     console.log("Servidor a rodar na porta 3000");
