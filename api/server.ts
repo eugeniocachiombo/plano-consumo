@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { userRoutes } from "./routes/user.route.js";
+import { userRoutes } from "./routes/user.routes.js";
 import { categoryRoutes } from "./routes/category.routes.js";
 import { consumptionPlanRoutes } from "./routes/consumption-plan.routes.js";
 import { consumptionRoutes } from "./routes/consumption.routes.js";

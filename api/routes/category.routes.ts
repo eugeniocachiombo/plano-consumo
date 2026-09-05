@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { categoryRepository } from "../repository/category.repository";
-import { errorReport } from "../repository/base/errorHandler.repository";
+import { categoryRepository } from "../repository/category.repository.js";
+import { errorReport } from "../repository/base/errorHandler.repository.js";
 
 const categoryRoutes = Router();
 

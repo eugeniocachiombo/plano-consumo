@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { consumptionRepository } from "../repository/consumption.repository";
-import { errorReport } from "../repository/base/errorHandler.repository";
+import { consumptionRepository } from "../repository/consumption.repository.js";
+import { errorReport } from "../repository/base/errorHandler.repository.js";
 
 const consumptionRoutes = Router();
 

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
-import { userRepository } from "../repository/user.repository";
-import { errorReport } from "../repository/base/errorHandler.repository";
+import { userRepository } from "../repository/user.repository.js";
+import { errorReport } from "../repository/base/errorHandler.repository.js";
 import jwt from "jsonwebtoken";
 
 const userRoutes = Router();
