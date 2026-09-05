@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
-import { Crud } from "./base/crud.repository";
+import { Crud } from "./base/crud.repository.js";
 import { prisma } from '../lib/prisma';
 
 export const createUserSchema = z.object({

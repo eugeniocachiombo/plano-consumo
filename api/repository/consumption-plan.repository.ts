@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Crud } from "./base/crud.repository";
+import { Crud } from "./base/crud.repository.js";
 
 class ConsumptionPlanRepository extends Crud {
     constructor() {
