@@ -48,7 +48,7 @@ userRoutes.get("/users", async (_req: Request, res: Response) => {
 
 userRoutes.get("/users/:id", async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params);
+        const id = Number(req.params.id);
         const user = await userRepository.find(id);
         return res.status(200).json(user);
     } catch (error) {
@@ -58,7 +58,7 @@ userRoutes.get("/users/:id", async (req: Request, res: Response) => {
 
 userRoutes.put("/users/:id", async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params);
+        const id = Number(req.params.id);
         const updatedUser = await userRepository.update(id, req.body);
         return res.status(200).json(updatedUser);
     } catch (error) {
@@ -68,7 +68,7 @@ userRoutes.put("/users/:id", async (req: Request, res: Response) => {
 
 userRoutes.delete("/users/:id", async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params);
+        const id = Number(req.params.id);
         await userRepository.delete(id);
         return res.status(200).json({ message: "Registo apagado com sucesso" });
     } catch (error) {

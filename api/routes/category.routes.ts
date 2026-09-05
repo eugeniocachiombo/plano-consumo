@@ -50,7 +50,7 @@ categoryRoutes.put("/categories/:id", async (req: Request, res: Response) => {
 
 categoryRoutes.delete("/categories/:id", async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params);
+        const id = Number(req.params.id);
         const userId = Number(req.query.userId);
         await categoryRepository.findAndVerifyUser(id, userId);
 
