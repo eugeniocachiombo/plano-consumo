@@ -37,19 +37,44 @@ class UserRepository extends Crud {
         });
     }
 
-    protected async beforeCreate(data: any) {
-        if (data.password) {
-            data.password = await bcrypt.hash(data.password, 10);
-        }
-        return data;
+    async create(data: unknown) {
+
+        const validatedData = await createUserSchema.parseAsync(data);
+        const hashedPassword = await bcrypt.hash(
+            validatedData.password,
+            10
+        );
+
+        return await prisma.user.create({
+            data: {
+                ...validatedData,
+                password: hashedPassword
+            }
+        });
     }
 
-    protected async beforeUpdate(data: any) {
-        if (data.password) {
-            data.password = await bcrypt.hash(data.password, 10);
+    async update(id: string | number, data: unknown) {
+        
+        const validatedData = await updateUserSchema.parseAsync(data);
+        const updateData = {
+            ...validatedData
+        };
+
+        if (updateData.password) {
+            updateData.password = await bcrypt.hash(
+                updateData.password,
+                10
+            );
         }
-        return data;
+
+        return await prisma.user.update({
+            where: {
+                id: Number(id)
+            },
+            data: updateData
+        });
     }
+
 
    
     async login(data: unknown, customSchema?: z.ZodSchema) {
