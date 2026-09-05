@@ -151,8 +151,13 @@ const categoriesSummary = computed(() => {
   return categories
     .map((cat) => {
       const totalCat = items
-        .filter((c) => Number(c.categoryId) === Number(cat.id) && Number(c.month) === currentMonth && Number(c.year) === currentYear)
-        .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+        .filter(
+          (c) =>
+            String(c.categoryId) === String(cat.id) &&
+            Number(c.month) === currentMonth &&
+            Number(c.year) === currentYear
+        )
+        .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
       const percent = monthTotal > 0 ? Math.round((totalCat / monthTotal) * 100) : 0;
 
@@ -162,7 +167,7 @@ const categoriesSummary = computed(() => {
         percent
       };
     })
-    .sort((a, b) => b.value - a.value); 
+    .sort((a, b) => b.value - a.value);
 });
 
 // --- PAGINAÇÃO DO RESUMO POR CATEGORIA ---
