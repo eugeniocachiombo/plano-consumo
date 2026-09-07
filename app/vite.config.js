@@ -7,25 +7,34 @@ export default defineConfig({
   plugins: [vue(), tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['assets/img/favicon.png', 'assets/img/apple-touch-icon.png', 'assets/img/masked-icon.png'],
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
       manifest: {
         name: 'PlanoK - Gestão de Consumo',
-        short_name: 'VuePWA',
+        short_name: 'PlanoK',
         description: 'Descrição do meu aplicativo Vue PWA',
         theme_color: '#ffffff',
-        devOptions: {
-          enabled: true 
-        },
+        background_color: '#ffffff',
+        display: 'standalone',
         icons: [
           {
-            src: '/assets/img/pwa-192x192.png',
+            src: 'assets/img/pwa-192x192.png', 
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: '/assets/img/pwa-512x512.png',
+            src: 'assets/img/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png'
+          },
+          {
+            src: 'assets/img/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable' 
           }
         ]
       }

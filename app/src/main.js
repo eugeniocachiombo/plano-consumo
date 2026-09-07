@@ -4,12 +4,14 @@ import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice'; // 1. IMPORTAR
 import PrimeVue from 'primevue/config';
 import Aura from '@primeuix/themes/aura';
+import { registerSW } from 'virtual:pwa-register'
 import 'primeicons/primeicons.css';
 import '@/assets/styles.css';
 
 import App from './App.vue';
 import router from './router';
 
+registerSW({ immediate: true })
 const app = createApp(App);
 
 app.use(router);
