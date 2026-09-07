@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [vue(), tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['assets/img/favicon.png', 'assets/img/apple-touch-icon.png', 'assets/img/masked-icon.png'],
+      includeAssets: ['/assets/img/favicon.png', '/assets/img/apple-touch-icon.png', '/assets/img/masked-icon.png'],
       devOptions: {
         enabled: true,
         type: 'module'
@@ -21,17 +21,17 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'assets/img/pwa-192x192.png', 
+            src: '/assets/img/pwa-192x192.png', 
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'assets/img/pwa-512x512.png',
+            src: '/assets/img/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'assets/img/pwa-512x512.png',
+            src: '/assets/img/pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable' 
