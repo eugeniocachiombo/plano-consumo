@@ -10,7 +10,8 @@ export default defineConfig({
       includeAssets: ['/assets/img/favicon.png', '/assets/img/apple-touch-icon.png', '/assets/img/masked-icon.png'],
       devOptions: {
         enabled: true,
-        type: 'module'
+        type: 'module',
+        suppressWarnings: true
       },
       manifest: {
         name: 'PlanoK - Gestão de Consumo',
