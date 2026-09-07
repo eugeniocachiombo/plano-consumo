@@ -21,7 +21,6 @@ import { useConsumptionPlanStore } from '@/stores/consumption-plan.store';
 import { useCategoryStore } from '@/stores/category.store';
 import { useToast } from 'primevue/usetoast';
 
-// Stores
 const consumptionStore = useConsumptionStore();
 const consumptionPlanStore = useConsumptionPlanStore();
 const categoryStore = useCategoryStore();
@@ -36,14 +35,12 @@ const currentDate = new Date();
 const currentMonth = currentDate.getMonth() + 1;
 const currentYear = currentDate.getFullYear();
 
-// Formulário de Novo Consumo
 const newConsumption = reactive({
   categoryId: null,
   description: '',
   value: null
 });
 
-// Erros de Validação
 const fieldErrors = ref({});
 
 function clearFieldError(field) {
@@ -82,7 +79,6 @@ function validateForm() {
   return Object.keys(errors).length === 0;
 }
 
-// Opções de Categorias para o Select
 const categoriesOptions = computed(() => {
   return (categoryStore.categories || []).map((c) => ({
     label: c.name,
@@ -90,7 +86,6 @@ const categoriesOptions = computed(() => {
   }));
 });
 
-// Totais do Mês Atual
 const currentMonthPlanTotal = computed(() => {
   const plans = consumptionPlanStore.consumptionPlans || [];
   return plans
@@ -115,7 +110,6 @@ const availablePercent = computed(() => {
   return Math.max(0, Math.round(pct));
 });
 
-// Dados do Gráfico
 const chartData = computed(() => {
   const monthLabels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const items = consumptionStore.consumptions || [];
@@ -130,7 +124,6 @@ const chartData = computed(() => {
     });
   }
 
-  // Últimos 6 meses
   const result = [];
   for (let i = 5; i >= 0; i--) {
     const d = new Date(currentYear, currentDate.getMonth() - i, 1);
@@ -144,7 +137,6 @@ const chartData = computed(() => {
   return result;
 });
 
-// --- PROCESSAMENTO DO RESUMO POR CATEGORIA ---
 const categoriesSummary = computed(() => {
   const categories = categoryStore.categories || [];
   const items = consumptionStore.consumptions || [];
@@ -182,7 +174,6 @@ const categoriesSummary = computed(() => {
   });
 });
 
-// --- PAGINAÇÃO DO RESUMO POR CATEGORIA ---
 const categoryPage = ref(1);
 const categoriesPerPage = 4;
 
@@ -207,7 +198,6 @@ function nextCategoryPage() {
   }
 }
 
-// Últimos Consumos para a Tabela
 const recentConsumptions = computed(() => {
   const list = [...(consumptionStore.consumptions || [])];
   return list.sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 5);
@@ -291,7 +281,6 @@ onMounted(async () => {
       <Button label="Novo consumo" icon="pi pi-plus" @click="openCreateDialog" />
     </div>
 
-    <!-- CARDS DE ESTATÍSTICA (SKELETON / DADOS REAL) -->
     <div v-if="isLoadingData" class="stats-grid">
       <Card v-for="i in 3" :key="i">
         <template #content>
@@ -328,7 +317,6 @@ onMounted(async () => {
     </div>
 
     <div class="dashboard-grid">
-      <!-- GRÁFICO (SKELETON / DADOS REAL) -->
       <Card class="dashboard-card">
         <template #title>
           <div class="card-title-row">
@@ -340,11 +328,12 @@ onMounted(async () => {
           <div v-if="isLoadingData" class="flex flex-column gap-3 py-4">
             <Skeleton width="100%" height="220px" />
           </div>
-          <ConsumptionChart v-else :data="chartData" />
+          <div v-else class="chart-wrapper">
+            <ConsumptionChart :data="chartData" />
+          </div>
         </template>
       </Card>
 
-      <!-- RESUMO POR CATEGORIA (SKELETON / DADOS REAL) -->
       <Card class="dashboard-card">
         <template #title>
           <div class="card-title-row">
@@ -353,7 +342,6 @@ onMounted(async () => {
           </div>
         </template>
         <template #content>
-          <!-- Skeleton Loading -->
           <div v-if="isLoadingData" class="category-wrapper">
             <div class="category-list">
               <div v-for="n in 4" :key="n" class="category-item">
@@ -367,12 +355,11 @@ onMounted(async () => {
             </div>
           </div>
 
-          <!-- Conteúdo Real -->
           <div v-else-if="categoriesSummary.length > 0" class="category-wrapper">
             <div class="category-list">
               <div v-for="category in paginatedCategoriesSummary" :key="category.id || category.name" class="category-item">
                 <div class="category-top">
-                  <span>{{ category.name }}</span>
+                  <span :title="category.name">{{ category.name }}</span>
                   <strong>{{ category.value.toLocaleString('pt-AO') }} Kz</strong>
                 </div>
                 <ProgressBar :value="category.percent" :show-value="false" />
@@ -412,7 +399,6 @@ onMounted(async () => {
       </Card>
     </div>
 
-    <!-- TABELA ÚLTIMOS CONSUMOS (SKELETON / DADOS REAL) -->
     <Card class="dashboard-card">
       <template #title>
         <div class="card-title-row">
@@ -581,17 +567,70 @@ onMounted(async () => {
 <style scoped>
 @import '../assets/dashboard.css';
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (max-width: 991px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dashboard-card {
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
 .category-wrapper {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 280px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .category-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  width: 100%;
+}
+
+.category-item {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.category-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.category-top span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.category-top strong {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .category-pagination {
@@ -601,6 +640,7 @@ onMounted(async () => {
   margin-top: 1rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--surface-border, #e5e7eb);
+  width: 100%;
 }
 
 .pagination-buttons {
