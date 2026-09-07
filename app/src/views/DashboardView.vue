@@ -416,7 +416,12 @@ onMounted(async () => {
           <Column header="Estado"><template #body><Skeleton width="40%" /></template></Column>
         </DataTable>
 
-        <DataTable v-else :value="recentConsumptions" responsive-layout="scroll">
+        <DataTable 
+          v-else 
+          :value="recentConsumptions" 
+          responsive-layout="scroll" 
+          class="mobile-card-table"
+        >
           <template #empty>
             <div class="empty-state">
               <i class="pi pi-receipt text-3xl text-400 mb-2"></i>
@@ -646,5 +651,46 @@ onMounted(async () => {
 .pagination-buttons {
   display: flex;
   gap: 0.25rem;
+}
+
+/* Formatação Responsiva Exclusiva para a Tabela 'Últimos consumos' em Mobile */
+@media (max-width: 768px) {
+  .mobile-card-table :deep(.p-datatable-thead) {
+    display: none;
+  }
+
+  .mobile-card-table :deep(.p-datatable-tbody > tr) {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-card, #ffffff);
+    border: 1px solid var(--surface-border, #e5e7eb);
+    border-radius: 10px;
+    margin: 0.75rem 0;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  }
+
+  .mobile-card-table :deep(.p-datatable-tbody > tr > td) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none;
+    padding: 0.45rem 0;
+    width: 100% !important;
+    text-align: right;
+  }
+
+  /* Exibe os cabeçalhos das colunas no lado esquerdo do cartão */
+  .mobile-card-table :deep(.p-datatable-tbody > tr > td:nth-child(1))::before { content: "Data"; font-weight: 600; color: var(--text-color-secondary, #6c757d); font-size: 0.85rem; }
+  .mobile-card-table :deep(.p-datatable-tbody > tr > td:nth-child(2))::before { content: "Categoria"; font-weight: 600; color: var(--text-color-secondary, #6c757d); font-size: 0.85rem; }
+  .mobile-card-table :deep(.p-datatable-tbody > tr > td:nth-child(3))::before { content: "Descrição"; font-weight: 600; color: var(--text-color-secondary, #6c757d); font-size: 0.85rem; }
+  .mobile-card-table :deep(.p-datatable-tbody > tr > td:nth-child(4))::before { content: "Valor"; font-weight: 600; color: var(--text-color-secondary, #6c757d); font-size: 0.85rem; }
+  .mobile-card-table :deep(.p-datatable-tbody > tr > td:nth-child(5))::before { content: "Estado"; font-weight: 600; color: var(--text-color-secondary, #6c757d); font-size: 0.85rem; }
+
+  .mobile-card-table :deep(.p-datatable-tbody > tr > td:last-child) {
+    border-top: 1px dashed var(--surface-border, #e5e7eb);
+    margin-top: 0.4rem;
+    padding-top: 0.5rem;
+  }
 }
 </style>
