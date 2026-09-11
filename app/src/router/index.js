@@ -11,7 +11,6 @@ const routes = [
     name: "landpage",
     component: () => import("@/views/LandingPage.vue"),
     meta: {
-      requiresGuest: true,
       title: 'Plano de Consumo — Controle os seus gastos',
       lang: 'pt-AO'
     }
