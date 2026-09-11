@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { api } from '@/services/api';
+import cryptoService from '../services/crypto.service';
 
 export interface Category {
   id: number;
@@ -109,8 +110,10 @@ export const useUserStore = defineStore('user', () => {
           { name: "Dívidas", editable: false },
           { name: "Poupança", editable: false }
         ];
+        const userId = cryptoService.encryptId(String(response.id)); 
+        
         categories.forEach(async (cat) =>
-           await api.post<unknown, Category>(`/categories?userId=${response.id}`, cat)
+           await api.post<unknown, Category>(`/categories?userId=${userId}`, cat)
         );
       }
 
