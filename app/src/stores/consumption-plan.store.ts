@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '@/services/api';
+import cryptoService from '../services/crypto.service';
 
 export interface ConsumptionPlan {
   id: number;
@@ -32,7 +33,8 @@ export interface UpdateConsumptionPlanPayload {
 }
 
 export const useConsumptionPlanStore = defineStore('consumptionPlan', () => {
-  const userId = Number(localStorage.getItem('userID')); 
+  const loggedId = String(localStorage.getItem('userID'));
+  const userId = cryptoService.encryptId(loggedId);  
   const consumptionPlans = ref<ConsumptionPlan[]>([]);
   const currentPlan = ref<ConsumptionPlan | null>(null);
   const isLoading = ref<boolean>(false);
@@ -62,7 +64,8 @@ export const useConsumptionPlanStore = defineStore('consumptionPlan', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.get<unknown, ConsumptionPlan>(`/consumption-plans/${id}?userId=${userId}`);
+      const planID = cryptoService.encryptId(String(id));
+      const response = await api.get<unknown, ConsumptionPlan>(`/consumption-plans/${planID}?userId=${userId}`);
       currentPlan.value = response;
       return response;
     } catch (err: any) {
@@ -94,7 +97,8 @@ export const useConsumptionPlanStore = defineStore('consumptionPlan', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.put<unknown, ConsumptionPlan>(`/consumption-plans/${id}?userId=${userId}`, payload);
+      const planID = cryptoService.encryptId(String(id));
+      const response = await api.put<unknown, ConsumptionPlan>(`/consumption-plans/${planID}?userId=${userId}`, payload);
       await list();
       return response;
     } catch (err: any) {
@@ -110,7 +114,8 @@ export const useConsumptionPlanStore = defineStore('consumptionPlan', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      await api.delete(`/consumption-plans/${id}?userId=${userId}`);
+      const planID = cryptoService.encryptId(String(id));
+      await api.delete(`/consumption-plans/${planID}?userId=${userId}`);
       await list();
     } catch (err: any) {
       const message = err.response?.data?.message || 'Erro ao eliminar plano de consumo.';

@@ -1,12 +1,13 @@
 import { Router, Request, Response } from "express";
 import { consumptionPlanRepository } from "../repository/consumption-plan.repository.js";
 import { errorReport } from "../repository/base/errorHandler.repository.js";
+import cryptoService from "../services/crypto.service.js";
 
 const consumptionPlanRoutes = Router();
 
 consumptionPlanRoutes.post("/consumption-plans", async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.query.userId);
+        const userId =cryptoService.decryptId(String(req.query.userId));
         const newPlan = await consumptionPlanRepository.create({ ...req.body, userId });
         return res.status(201).json(newPlan);
     } catch (error) {
@@ -16,7 +17,7 @@ consumptionPlanRoutes.post("/consumption-plans", async (req: Request, res: Respo
 
 consumptionPlanRoutes.get("/consumption-plans", async (req: Request, res: Response) => {
     try {
-        const userId = Number(req.query.userId);
+        const userId =cryptoService.decryptId(String(req.query.userId));
         const plans = await consumptionPlanRepository.listByUserId(userId);
         return res.status(200).json(plans);
     } catch (error) {
@@ -26,8 +27,8 @@ consumptionPlanRoutes.get("/consumption-plans", async (req: Request, res: Respon
 
 consumptionPlanRoutes.get("/consumption-plans/:id", async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
-        const userId = Number(req.query.userId);
+        const id = cryptoService.decryptId(String(req.params.id));
+        const userId =cryptoService.decryptId(String(req.query.userId));
         const plan = await consumptionPlanRepository.findAndVerifyUser(id, userId);
         return res.status(200).json(plan);
     } catch (error) {
@@ -37,8 +38,8 @@ consumptionPlanRoutes.get("/consumption-plans/:id", async (req: Request, res: Re
 
 consumptionPlanRoutes.put("/consumption-plans/:id", async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
-        const userId = Number(req.query.userId);
+        const id = cryptoService.decryptId(String(req.params.id));
+        const userId =cryptoService.decryptId(String(req.query.userId));
         await consumptionPlanRepository.findAndVerifyUser(id, userId);
 
         const updatedPlan = await consumptionPlanRepository.update(id, req.body);
@@ -50,8 +51,8 @@ consumptionPlanRoutes.put("/consumption-plans/:id", async (req: Request, res: Re
 
 consumptionPlanRoutes.delete("/consumption-plans/:id", async (req: Request, res: Response) => {
     try {
-        const id = Number(req.params.id);
-        const userId = Number(req.query.userId);
+        const id = cryptoService.decryptId(String(req.params.id));
+        const userId =cryptoService.decryptId(String(req.query.userId));
         await consumptionPlanRepository.findAndVerifyUser(id, userId);
 
         await consumptionPlanRepository.delete(id);
