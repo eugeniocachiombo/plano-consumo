@@ -117,7 +117,6 @@ async function handleLogin() {
 </script>
 
 <template>
-  <Toast position="top-right" />
 
   <main class="auth-wrapper">
     <div class="auth-container">

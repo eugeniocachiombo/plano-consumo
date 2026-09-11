@@ -270,7 +270,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <Toast position="top-right" />
 
   <section>
     <div class="page-heading">
