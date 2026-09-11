@@ -1,5 +1,5 @@
 import CryptoJS from 'crypto-js';
-const CRYPTO_SECRET_KEY = String(process.env.CRYPTO_SECRET_KEY);
+const CRYPTO_SECRET_KEY = String(process.env.CRYPTO_SECRET_KEY || 'secret');
 
 class CryptoService {
     constructor(){
