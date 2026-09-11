@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { api } from '@/services/api';
+import cryptoService from '../services/crypto.service';
 
 export interface Consumption {
   id: number;
@@ -35,7 +36,8 @@ export interface UpdateConsumptionPayload {
 }
 
 export const useConsumptionStore = defineStore('consumption', () => {
-  const userId = Number(localStorage.getItem('userID')); 
+  const loggedId = String(localStorage.getItem('userID'));
+  const userId = cryptoService.encryptId(loggedId);  
   const consumptions = ref<Consumption[]>([]);
   const currentConsumption = ref<Consumption | null>(null);
   const isLoading = ref<boolean>(false);
@@ -65,7 +67,8 @@ export const useConsumptionStore = defineStore('consumption', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.get<unknown, Consumption>(`/consumptions/${id}?userId=${userId}`);
+      const catID = cryptoService.encryptId(String(id));
+      const response = await api.get<unknown, Consumption>(`/consumptions/${catID}?userId=${userId}`);
       currentConsumption.value = response;
       return response;
     } catch (err: any) {
@@ -97,7 +100,8 @@ export const useConsumptionStore = defineStore('consumption', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      const response = await api.put<unknown, Consumption>(`/consumptions/${id}?userId=${userId}`, payload);
+      const catID = cryptoService.encryptId(String(id));
+      const response = await api.put<unknown, Consumption>(`/consumptions/${catID}?userId=${userId}`, payload);
       await list();
       return response;
     } catch (err: any) {
@@ -113,7 +117,8 @@ export const useConsumptionStore = defineStore('consumption', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      await api.delete(`/consumptions/${id}?userId=${userId}`);
+      const catID = cryptoService.encryptId(String(id));
+      await api.delete(`/consumptions/${catID}?userId=${userId}`);
       await list();
     } catch (err: any) {
       const message = err.response?.data?.message || 'Erro ao eliminar consumo.';
