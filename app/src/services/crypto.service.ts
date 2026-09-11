@@ -1,5 +1,7 @@
 import CryptoJS from 'crypto-js';
-const CRYPTO_SECRET_KEY = import.meta.env.VITE_CRYPTO_SECRET_KEY
+const CRYPTO_SECRET_KEY = 'secret'
+// const CRYPTO_SECRET_KEY = import.meta.env.VITE_CRYPTO_SECRET_KEY
+console.log( String(import.meta.env.VITE_CRYPTO_SECRET_KEY))
 
 class CryptoService {
     public encryptId(text: string) {

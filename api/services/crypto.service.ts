@@ -1,6 +1,7 @@
 import CryptoJS from 'crypto-js';
-const CRYPTO_SECRET_KEY = String(process.env.CRYPTO_SECRET_KEY);
-
+const CRYPTO_SECRET_KEY = String('secret');
+// const CRYPTO_SECRET_KEY = String(process.env.CRYPTO_SECRET_KEY);
+console.log( String(process.env.CRYPTO_SECRET_KEY))
 
 class CryptoService {
     public encryptId(text: string) {
